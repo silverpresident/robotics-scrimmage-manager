@@ -1,4 +1,4 @@
--- Create database
+-- Create database if it doesn't exist
 IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'RoboticsManager')
 BEGIN
     CREATE DATABASE RoboticsManager;
@@ -8,12 +8,12 @@ GO
 USE RoboticsManager;
 GO
 
--- Create schema
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'robotics')
-BEGIN
-    EXEC('CREATE SCHEMA robotics');
-END
+-- Enable GUID compression for better performance with EntityFramework
+ALTER DATABASE RoboticsManager
+SET COMPRESSION_DELAY = 0;
 GO
+
+-- Create AspNetIdentity tables if they don't exist
 
 -- AspNetRoles table
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AspNetRoles]') AND type in (N'U'))
@@ -53,136 +53,150 @@ BEGIN
 END
 GO
 
--- Teams table
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[robotics].[Teams]') AND type in (N'U'))
+-- Create custom indexes for better query performance
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Teams]') AND type in (N'U'))
 BEGIN
-    CREATE TABLE [robotics].[Teams] (
-        [Id] uniqueidentifier NOT NULL DEFAULT NEWID(),
-        [Name] nvarchar(100) NOT NULL,
-        [TeamNo] nvarchar(20) NOT NULL,
-        [School] nvarchar(100) NOT NULL,
-        [Color] nvarchar(7) NOT NULL,
-        [LogoUrl] nvarchar(2048) NULL,
-        [TotalPoints] int NOT NULL DEFAULT 0,
-        [CreatedAt] datetime2 NOT NULL DEFAULT GETUTCDATE(),
-        [UpdatedAt] datetime2 NULL,
-        [CreatedBy] nvarchar(450) NULL,
-        [UpdatedBy] nvarchar(450) NULL,
-        CONSTRAINT [PK_Teams] PRIMARY KEY ([Id]),
-        CONSTRAINT [UK_Teams_TeamNo] UNIQUE ([TeamNo])
-    );
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Teams_TotalPoints' AND object_id = OBJECT_ID('Teams'))
+    BEGIN
+        CREATE NONCLUSTERED INDEX [IX_Teams_TotalPoints] ON [dbo].[Teams] ([TotalPoints] DESC);
+    END
+
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Teams_TeamNo' AND object_id = OBJECT_ID('Teams'))
+    BEGIN
+        CREATE NONCLUSTERED INDEX [IX_Teams_TeamNo] ON [dbo].[Teams] ([TeamNo]);
+    END
+END
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Challenges]') AND type in (N'U'))
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Challenges_Points' AND object_id = OBJECT_ID('Challenges'))
+    BEGIN
+        CREATE NONCLUSTERED INDEX [IX_Challenges_Points] ON [dbo].[Challenges] ([Points] DESC);
+    END
+END
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Announcements]') AND type in (N'U'))
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Announcements_CreatedAt' AND object_id = OBJECT_ID('Announcements'))
+    BEGIN
+        CREATE NONCLUSTERED INDEX [IX_Announcements_CreatedAt] ON [dbo].[Announcements] ([CreatedAt] DESC);
+    END
+
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Announcements_IsVisible' AND object_id = OBJECT_ID('Announcements'))
+    BEGIN
+        CREATE NONCLUSTERED INDEX [IX_Announcements_IsVisible] ON [dbo].[Announcements] ([IsVisible]);
+    END
+END
+
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Updates]') AND type in (N'U'))
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Updates_CreatedAt' AND object_id = OBJECT_ID('Updates'))
+    BEGIN
+        CREATE NONCLUSTERED INDEX [IX_Updates_CreatedAt] ON [dbo].[Updates] ([CreatedAt] DESC);
+    END
+END
+
+-- Create stored procedures for common operations
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GetTeamLeaderboard]') AND type in (N'P'))
+BEGIN
+    EXEC('
+    CREATE PROCEDURE [dbo].[sp_GetTeamLeaderboard]
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        
+        SELECT 
+            t.Id,
+            t.Name,
+            t.TeamNo,
+            t.School,
+            t.TotalPoints,
+            COUNT(cc.Id) AS CompletedChallenges
+        FROM Teams t
+        LEFT JOIN ChallengeCompletions cc ON t.Id = cc.TeamId
+        GROUP BY t.Id, t.Name, t.TeamNo, t.School, t.TotalPoints
+        ORDER BY t.TotalPoints DESC;
+    END
+    ');
 END
 GO
 
--- Challenges table
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[robotics].[Challenges]') AND type in (N'U'))
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_GetChallengeStats]') AND type in (N'P'))
 BEGIN
-    CREATE TABLE [robotics].[Challenges] (
-        [Id] uniqueidentifier NOT NULL DEFAULT NEWID(),
-        [Name] nvarchar(100) NOT NULL,
-        [Description] nvarchar(max) NOT NULL,
-        [Points] int NOT NULL,
-        [IsUnique] bit NOT NULL DEFAULT 0,
-        [CreatedAt] datetime2 NOT NULL DEFAULT GETUTCDATE(),
-        [UpdatedAt] datetime2 NULL,
-        [CreatedBy] nvarchar(450) NULL,
-        [UpdatedBy] nvarchar(450) NULL,
-        CONSTRAINT [PK_Challenges] PRIMARY KEY ([Id]),
-        CONSTRAINT [UK_Challenges_Name] UNIQUE ([Name])
-    );
+    EXEC('
+    CREATE PROCEDURE [dbo].[sp_GetChallengeStats]
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        
+        SELECT 
+            c.Id,
+            c.Name,
+            c.Points,
+            c.IsUnique,
+            COUNT(cc.Id) AS CompletionCount,
+            MIN(cc.CreatedAt) AS FirstCompletion
+        FROM Challenges c
+        LEFT JOIN ChallengeCompletions cc ON c.Id = cc.ChallengeId
+        GROUP BY c.Id, c.Name, c.Points, c.IsUnique
+        ORDER BY CompletionCount DESC;
+    END
+    ');
 END
 GO
 
--- ChallengeCompletions table
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[robotics].[ChallengeCompletions]') AND type in (N'U'))
+-- Create views for common queries
+IF NOT EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'[dbo].[vw_ActiveAnnouncements]'))
 BEGIN
-    CREATE TABLE [robotics].[ChallengeCompletions] (
-        [Id] uniqueidentifier NOT NULL DEFAULT NEWID(),
-        [TeamId] uniqueidentifier NOT NULL,
-        [ChallengeId] uniqueidentifier NOT NULL,
-        [PointsAwarded] int NOT NULL,
-        [Notes] nvarchar(max) NULL,
-        [CreatedAt] datetime2 NOT NULL DEFAULT GETUTCDATE(),
-        [UpdatedAt] datetime2 NULL,
-        [CreatedBy] nvarchar(450) NULL,
-        [UpdatedBy] nvarchar(450) NULL,
-        CONSTRAINT [PK_ChallengeCompletions] PRIMARY KEY ([Id]),
-        CONSTRAINT [UK_ChallengeCompletions_TeamChallenge] UNIQUE ([TeamId], [ChallengeId]),
-        CONSTRAINT [FK_ChallengeCompletions_Teams] FOREIGN KEY ([TeamId]) REFERENCES [robotics].[Teams] ([Id]) ON DELETE CASCADE,
-        CONSTRAINT [FK_ChallengeCompletions_Challenges] FOREIGN KEY ([ChallengeId]) REFERENCES [robotics].[Challenges] ([Id]) ON DELETE CASCADE
-    );
+    EXEC('
+    CREATE VIEW [dbo].[vw_ActiveAnnouncements]
+    AS
+    SELECT 
+        Id,
+        Body,
+        RenderedBody,
+        Priority,
+        CreatedAt,
+        UpdatedAt
+    FROM Announcements
+    WHERE IsVisible = 1
+    ');
 END
 GO
 
--- Announcements table
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[robotics].[Announcements]') AND type in (N'U'))
+IF NOT EXISTS (SELECT * FROM sys.views WHERE object_id = OBJECT_ID(N'[dbo].[vw_RecentUpdates]'))
 BEGIN
-    CREATE TABLE [robotics].[Announcements] (
-        [Id] uniqueidentifier NOT NULL DEFAULT NEWID(),
-        [Body] nvarchar(max) NOT NULL,
-        [RenderedBody] nvarchar(max) NULL,
-        [Priority] int NOT NULL,
-        [IsVisible] bit NOT NULL DEFAULT 1,
-        [CreatedAt] datetime2 NOT NULL DEFAULT GETUTCDATE(),
-        [UpdatedAt] datetime2 NULL,
-        [CreatedBy] nvarchar(450) NULL,
-        [UpdatedBy] nvarchar(450) NULL,
-        CONSTRAINT [PK_Announcements] PRIMARY KEY ([Id])
-    );
+    EXEC('
+    CREATE VIEW [dbo].[vw_RecentUpdates]
+    AS
+    SELECT TOP 100
+        Id,
+        Description,
+        Type,
+        CreatedAt,
+        ReferenceId
+    FROM Updates
+    ORDER BY CreatedAt DESC
+    ');
 END
 GO
 
--- Updates table
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[robotics].[Updates]') AND type in (N'U'))
+-- Set up database maintenance jobs
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[sp_CleanupOldUpdates]') AND type in (N'P'))
 BEGIN
-    CREATE TABLE [robotics].[Updates] (
-        [Id] uniqueidentifier NOT NULL DEFAULT NEWID(),
-        [Type] int NOT NULL,
-        [Description] nvarchar(max) NOT NULL,
-        [TeamId] uniqueidentifier NULL,
-        [ChallengeId] uniqueidentifier NULL,
-        [AnnouncementId] uniqueidentifier NULL,
-        [ChallengeCompletionId] uniqueidentifier NULL,
-        [Metadata] nvarchar(max) NULL,
-        [IsBroadcast] bit NOT NULL DEFAULT 0,
-        [CreatedAt] datetime2 NOT NULL DEFAULT GETUTCDATE(),
-        [UpdatedAt] datetime2 NULL,
-        [CreatedBy] nvarchar(450) NULL,
-        [UpdatedBy] nvarchar(450) NULL,
-        CONSTRAINT [PK_Updates] PRIMARY KEY ([Id]),
-        CONSTRAINT [FK_Updates_Teams] FOREIGN KEY ([TeamId]) REFERENCES [robotics].[Teams] ([Id]) ON DELETE SET NULL,
-        CONSTRAINT [FK_Updates_Challenges] FOREIGN KEY ([ChallengeId]) REFERENCES [robotics].[Challenges] ([Id]) ON DELETE SET NULL,
-        CONSTRAINT [FK_Updates_Announcements] FOREIGN KEY ([AnnouncementId]) REFERENCES [robotics].[Announcements] ([Id]) ON DELETE SET NULL,
-        CONSTRAINT [FK_Updates_ChallengeCompletions] FOREIGN KEY ([ChallengeCompletionId]) REFERENCES [robotics].[ChallengeCompletions] ([Id]) ON DELETE SET NULL
-    );
+    EXEC('
+    CREATE PROCEDURE [dbo].[sp_CleanupOldUpdates]
+        @DaysToKeep int = 30
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+        
+        DELETE FROM Updates
+        WHERE CreatedAt < DATEADD(day, -@DaysToKeep, GETUTCDATE());
+    END
+    ');
 END
 GO
 
--- Create indexes
-CREATE INDEX [IX_Teams_TotalPoints] ON [robotics].[Teams] ([TotalPoints] DESC);
-CREATE INDEX [IX_ChallengeCompletions_TeamId] ON [robotics].[ChallengeCompletions] ([TeamId]);
-CREATE INDEX [IX_ChallengeCompletions_ChallengeId] ON [robotics].[ChallengeCompletions] ([ChallengeId]);
-CREATE INDEX [IX_Announcements_Priority_IsVisible] ON [robotics].[Announcements] ([Priority], [IsVisible]);
-CREATE INDEX [IX_Updates_Type] ON [robotics].[Updates] ([Type]);
-CREATE INDEX [IX_Updates_CreatedAt] ON [robotics].[Updates] ([CreatedAt] DESC);
-GO
-
--- Insert default roles
-IF NOT EXISTS (SELECT * FROM [dbo].[AspNetRoles] WHERE [Name] = 'Administrator')
-BEGIN
-    INSERT INTO [dbo].[AspNetRoles] ([Id], [Name], [NormalizedName], [ConcurrencyStamp])
-    VALUES (NEWID(), 'Administrator', 'ADMINISTRATOR', NEWID());
-END
-
-IF NOT EXISTS (SELECT * FROM [dbo].[AspNetRoles] WHERE [Name] = 'Judge')
-BEGIN
-    INSERT INTO [dbo].[AspNetRoles] ([Id], [Name], [NormalizedName], [ConcurrencyStamp])
-    VALUES (NEWID(), 'Judge', 'JUDGE', NEWID());
-END
-
-IF NOT EXISTS (SELECT * FROM [dbo].[AspNetRoles] WHERE [Name] = 'Scorekeeper')
-BEGIN
-    INSERT INTO [dbo].[AspNetRoles] ([Id], [Name], [NormalizedName], [ConcurrencyStamp])
-    VALUES (NEWID(), 'Scorekeeper', 'SCOREKEEPER', NEWID());
-END
+PRINT 'Database setup completed successfully.';
 GO

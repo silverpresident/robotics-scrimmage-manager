@@ -1,21 +1,35 @@
+# Copy this file to terraform.tfvars and fill in your values
+# Do not commit terraform.tfvars to source control
+
 # Project configuration
-project_name = "robotics-scrimmage"
-environment  = "dev"
-location     = "eastus"
+project_name        = "robotics-manager"
+environment         = "Production"
+location           = "eastus"
+resource_group_name = "robotics-manager-rg"
+
+# App Service configuration
+app_service_sku    = "B1"  # Basic tier, 1 core
 
 # SQL Server configuration
-sql_admin_login    = "sqladmin"
-sql_admin_password = "Change_This_Password_123!" # Change this!
+sql_admin_login    = "your-sql-admin-username"
+sql_admin_password = "your-secure-password-here"
 
-# Optional overrides
-app_service_sku   = "B1"     # Options: F1 (Free), B1, B2, S1
-sql_database_sku  = "Basic"  # Options: Basic, S0, S1
-key_vault_sku     = "standard"
+# Authentication configuration
+google_client_id     = "your-google-client-id"
+google_client_secret = "your-google-client-secret"
+admin_email         = "admin@yourdomain.com"
 
-# Additional tags
+# Optional: Override default tags
 tags = {
-  Owner       = "IT Department"
-  Department  = "Robotics"
-  Project     = "Scrimmage 2024"
-  Environment = "Development"
+  Environment = "Production"
+  Project     = "Robotics Scrimmage Manager"
+  Terraform   = "true"
+  Owner       = "Your Name"
 }
+
+# Optional: Advanced configuration
+min_tls_version              = "1.2"
+ftps_state                   = "Disabled"
+http2_enabled               = true
+backup_retention_days       = 7
+geo_redundant_backup_enabled = false
