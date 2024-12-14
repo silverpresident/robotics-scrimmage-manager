@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9A19103F-16F7-4668-BE54-9A1E7A4F7556}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoboticsManager.Lib", "src\RoboticsManager.Lib\RoboticsManager.Lib.csproj", "{09CE4F6C-BC32-4457-853D-1ED97B39C99C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RoboticsManager.Web", "src\RoboticsManager.Web\RoboticsManager.Web.csproj", "{8872D8E0-4560-492E-87D1-1B0D4FF46966}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B8B7D1E9-5FA9-4378-A0CD-1BDBCED8752D}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		README.md = README.md
+		RoboticsManager.code-workspace = RoboticsManager.code-workspace
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sql", "sql", "{240C20C2-5F05-4E41-B8E4-1984F4B1A02E}"
+	ProjectSection(SolutionItems) = preProject
+		sql\cleanup.sql = sql\cleanup.sql
+		sql\README.md = sql\README.md
+		sql\seed.sql = sql\seed.sql
+		sql\setup.sql = sql\setup.sql
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "terraform", "terraform", "{F6217492-63CE-45DD-84B9-1F9D94ABF0F7}"
+	ProjectSection(SolutionItems) = preProject
+		terraform\main.tf = terraform\main.tf
+		terraform\README.md = terraform\README.md
+		terraform\terraform.tfvars.example = terraform\terraform.tfvars.example
+		terraform\variables.tf = terraform\variables.tf
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{09CE4F6C-BC32-4457-853D-1ED97B39C99C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09CE4F6C-BC32-4457-853D-1ED97B39C99C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09CE4F6C-BC32-4457-853D-1ED97B39C99C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09CE4F6C-BC32-4457-853D-1ED97B39C99C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8872D8E0-4560-492E-87D1-1B0D4FF46966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8872D8E0-4560-492E-87D1-1B0D4FF46966}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8872D8E0-4560-492E-87D1-1B0D4FF46966}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8872D8E0-4560-492E-87D1-1B0D4FF46966}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6F7G8H9I-0J1K-2L3M-4N5O-6P7Q8R9S0T1U}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,21 @@
+# Project configuration
+project_name = "robotics-scrimmage"
+environment  = "dev"
+location     = "eastus"
+
+# SQL Server configuration
+sql_admin_login    = "sqladmin"
+sql_admin_password = "Change_This_Password_123!" # Change this!
+
+# Optional overrides
+app_service_sku   = "B1"     # Options: F1 (Free), B1, B2, S1
+sql_database_sku  = "Basic"  # Options: Basic, S0, S1
+key_vault_sku     = "standard"
+
+# Additional tags
+tags = {
+  Owner       = "IT Department"
+  Department  = "Robotics"
+  Project     = "Scrimmage 2024"
+  Environment = "Development"
+}
