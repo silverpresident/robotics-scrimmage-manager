@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace RoboticsManager.Lib.Hubs
 {
-    public class UpdateHub : Hub
+    public class UpdateHub : Hub<IUpdateClient>
     {
         private readonly ILogger<UpdateHub> _logger;
 
@@ -34,37 +34,37 @@ namespace RoboticsManager.Lib.Hubs
         // Called when a team's points are updated
         public async Task NotifyLeaderboardUpdate()
         {
-            await Clients.All.SendAsync("ReceiveLeaderboardUpdate");
+            await Clients.All.ReceiveLeaderboardUpdate();
         }
 
         // Called when a new announcement is created or updated
         public async Task NotifyAnnouncementUpdate()
         {
-            await Clients.All.SendAsync("ReceiveAnnouncement");
+            await Clients.All.ReceiveAnnouncement();
         }
 
         // Called when a new update is created
         public async Task NotifyUpdate()
         {
-            await Clients.All.SendAsync("ReceiveUpdate");
+            await Clients.All.ReceiveUpdate();
         }
 
         // Called when a challenge is completed
         public async Task NotifyChallengeCompletion(string teamName, string challengeName, int points)
         {
-            await Clients.All.SendAsync("ReceiveChallengeCompletion", teamName, challengeName, points);
+            await Clients.All.ReceiveChallengeCompletion(teamName, challengeName, points);
         }
 
         // Called when a team is added or updated
         public async Task NotifyTeamUpdate(string teamName)
         {
-            await Clients.All.SendAsync("ReceiveTeamUpdate", teamName);
+            await Clients.All.ReceiveTeamUpdate(teamName);
         }
 
         // Called when a challenge is added or updated
         public async Task NotifyChallengeUpdate(string challengeName)
         {
-            await Clients.All.SendAsync("ReceiveChallengeUpdate", challengeName);
+            await Clients.All.ReceiveChallengeUpdate(challengeName);
         }
 
         // Group management for specific updates
@@ -91,25 +91,25 @@ namespace RoboticsManager.Lib.Hubs
         // Send update to specific team's group
         public async Task SendTeamSpecificUpdate(string teamId, string message)
         {
-            await Clients.Group($"team_{teamId}").SendAsync("ReceiveTeamSpecificUpdate", message);
+            await Clients.Group($"team_{teamId}").ReceiveTeamSpecificUpdate(message);
         }
 
         // Send update to specific challenge's group
         public async Task SendChallengeSpecificUpdate(string challengeId, string message)
         {
-            await Clients.Group($"challenge_{challengeId}").SendAsync("ReceiveChallengeSpecificUpdate", message);
+            await Clients.Group($"challenge_{challengeId}").ReceiveChallengeSpecificUpdate(message);
         }
 
         // Send admin-only updates
         public async Task SendAdminUpdate(string message)
         {
-            await Clients.Group("Administrators").SendAsync("ReceiveAdminUpdate", message);
+            await Clients.Group("Administrators").ReceiveAdminUpdate(message);
         }
 
         // Send judge-only updates
         public async Task SendJudgeUpdate(string message)
         {
-            await Clients.Group("Judges").SendAsync("ReceiveJudgeUpdate", message);
+            await Clients.Group("Judges").ReceiveJudgeUpdate(message);
         }
     }
 }

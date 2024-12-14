@@ -12,6 +12,7 @@ namespace RoboticsManager.Lib.Models
         ChallengeUpdated,
         ChallengeDeleted,
         ChallengeCompleted,
+        ChallengeCompletion,
         AnnouncementCreated,
         AnnouncementUpdated,
         AnnouncementDeleted,

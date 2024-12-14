@@ -77,14 +77,12 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        
         // Ensure database is created and migrations are applied
+        var context = services.GetRequiredService<ApplicationDbContext>();
         context.Database.Migrate();
 
         // Initialize database with seed data
-        await DbInitializer.InitializeAsync(context, logger);
+        await DbInitializer.InitializeAsync(services);
     }
     catch (Exception ex)
     {
