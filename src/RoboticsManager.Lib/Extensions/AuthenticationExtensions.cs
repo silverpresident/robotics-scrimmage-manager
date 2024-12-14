@@ -45,7 +45,7 @@ namespace RoboticsManager.Lib.Extensions
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders()
-            ;
+            .AddDefaultUI();
 
             // Configure authentication
             services.AddAuthentication(options =>
@@ -102,7 +102,7 @@ namespace RoboticsManager.Lib.Extensions
                 };
             });
 
-            // Configure authorization policies
+            // Configure authorization <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.0" />
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("RequireAdministrator", policy =>

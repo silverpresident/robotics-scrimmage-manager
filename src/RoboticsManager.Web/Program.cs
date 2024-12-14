@@ -29,12 +29,7 @@ builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddScoped<IChallengeService, ChallengeService>();
 builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
 builder.Services.AddScoped<IUpdateService, UpdateService>();
-
-// Add Identity services
-builder.Services.AddDefaultIdentity<ApplicationUser>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultUI();
-
+ 
 builder.Services.AddRazorPages();
 
 // Configure logging
