@@ -14,15 +14,17 @@
     </div>
 
     <div class="col-md-3">
-        <div class="card h-100 text-center">
-            <div class="card-body">
-                <div class="display-4 mb-2">@Model.TotalChallenges</div>
-                <h5 class="card-title mb-0">Challenges</h5>
+        <a asp-controller="Challenges" asp-action="Index">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="display-4 mb-2">@Model.TotalChallenges</div>
+                    <h5 class="card-title mb-0">Challenges</h5>
+                </div>
+                <div class="card-footer bg-warning text-dark">
+                    <i class="bi bi-trophy-fill"></i>
+                </div>
             </div>
-            <div class="card-footer bg-warning text-dark">
-                <i class="bi bi-trophy-fill"></i>
-            </div>
-        </div>
+        </a>
     </div>
 
     <div class="col-md-3">
@@ -57,18 +59,18 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    .card:hover {
-        transform: translateY(-5px);
-    }
+        .card:hover {
+            transform: translateY(-5px);
+        }
 
     .card-footer {
         border-top: none;
         padding: 0.75rem;
     }
 
-    .card-footer i {
-        font-size: 1.5rem;
-    }
+        .card-footer i {
+            font-size: 1.5rem;
+        }
 
     .display-4 {
         font-size: 2.5rem;
@@ -106,6 +108,7 @@
             opacity: 0;
             transform: translateY(20px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
