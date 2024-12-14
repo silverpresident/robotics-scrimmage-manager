@@ -11,8 +11,7 @@
     # pkgs.python311Packages.pip
     # pkgs.nodejs_20
     # pkgs.nodePackages.nodemon
-       pkgs.dotnet-sdk_8 # Or the desired .NET SDK version
-     
+    pkgs.dotnet-sdk_8 # Or the desired .NET SDK version
   ];
 
   # Sets environment variables in the workspace
