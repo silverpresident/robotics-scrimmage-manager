@@ -1,162 +1,138 @@
-# Infrastructure Deployment with Terraform
+# Azure Infrastructure Configuration
 
 This directory contains Terraform configurations for deploying the Robotics Scrimmage Manager infrastructure to Azure.
 
+## Infrastructure Components
+
+- **Resource Group**: Contains all resources
+- **App Service Plan**: Hosts the web application
+- **Web App**: .NET 8.0 application
+- **SQL Server**: Database server
+- **SQL Database**: Application database
+- **Application Insights**: Monitoring and analytics
+
 ## Prerequisites
 
-1. [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-2. [Terraform](https://www.terraform.io/downloads.html) (version >= 1.0.0)
-3. Azure subscription with required permissions
-4. Service Principal with Contributor access
+1. Install required tools:
+   - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+   - [Terraform](https://www.terraform.io/downloads.html)
 
-## Azure Resources Created
+2. Login to Azure:
+   ```bash
+   az login
+   ```
 
-- Resource Group
-- Azure SQL Server and Database
-- App Service Plan and App Service
-- Key Vault
-- Application Insights
+3. Configure Terraform:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   # Edit terraform.tfvars with your values
+   ```
 
-## Configuration
+## Required Variables
 
-1. Create a `terraform.tfvars` file with your specific values:
-
-```hcl
-project_name       = "robotics-scrimmage"
-environment        = "dev"  # or "staging" or "prod"
-location          = "eastus"
-sql_admin_login   = "your-admin-username"
-sql_admin_password = "your-secure-password"
-
-# Optional overrides
-app_service_sku   = "B1"    # Default: "B1"
-sql_database_sku  = "Basic" # Default: "Basic"
-key_vault_sku     = "standard" # Default: "standard"
-
-tags = {
-  Owner       = "Your Name"
-  Department  = "Your Department"
-}
-```
-
-2. Create a `backend.tfvars` file for the Azure Storage backend:
-
-```hcl
-resource_group_name  = "terraform-state-rg"
-storage_account_name = "tfstate12345"
-container_name       = "tfstate"
-key                 = "robotics-scrimmage.tfstate"
-```
-
-## Authentication
-
-1. Log in to Azure:
-```bash
-az login
-```
-
-2. Set your subscription:
-```bash
-az account set --subscription "Your Subscription Name"
-```
+| Variable | Description |
+|----------|-------------|
+| project_name | Project identifier for resource naming |
+| environment | Deployment environment (dev/staging/prod) |
+| location | Azure region for resources |
+| sql_admin_login | SQL Server admin username |
+| sql_admin_password | SQL Server admin password |
+| google_client_id | Google OAuth client ID |
+| google_client_secret | Google OAuth client secret |
+| admin_email | System administrator email |
 
 ## Deployment Steps
 
 1. Initialize Terraform:
+   ```bash
+   terraform init
+   ```
+
+2. Preview changes:
+   ```bash
+   terraform plan
+   ```
+
+3. Apply configuration:
+   ```bash
+   terraform apply
+   ```
+
+4. Verify deployment:
+   ```bash
+   terraform output webapp_url
+   ```
+
+## Resource Naming Convention
+
+- Resource Group: `{project_name}-rg`
+- App Service Plan: `{project_name}-plan`
+- Web App: `{project_name}-web`
+- SQL Server: `{project_name}-sql`
+- SQL Database: `{project_name}-db`
+- Application Insights: `{project_name}-insights`
+
+## Cost Optimization
+
+Default configuration uses:
+- B1 App Service Plan (Basic tier)
+- Basic SQL Database (2GB)
+- Standard Application Insights
+
+Modify `app_service_sku` and database settings in variables.tf for different tiers.
+
+## Security Features
+
+- HTTPS enforced
+- TLS 1.2 required
+- Azure services allowed to SQL Server
+- Connection strings stored securely
+- Managed identities enabled
+- Network security rules applied
+
+## Monitoring
+
+Application Insights provides:
+- Performance monitoring
+- Usage analytics
+- Error tracking
+- Custom metrics
+- Real-time monitoring
+
+## Backup and Recovery
+
+- SQL Database automatic backups
+- Point-in-time restore capability
+- Geo-redundant backup optional
+- Configurable retention period
+
+## Maintenance
+
+To update infrastructure:
+1. Modify configuration files
+2. Run `terraform plan` to preview
+3. Run `terraform apply` to implement
+
+To destroy infrastructure:
 ```bash
-terraform init -backend-config=backend.tfvars
+terraform destroy
 ```
-
-2. Plan the deployment:
-```bash
-terraform plan -var-file=terraform.tfvars -out=tfplan
-```
-
-3. Apply the configuration:
-```bash
-terraform apply tfplan
-```
-
-## Post-Deployment
-
-After deployment, you'll need to:
-
-1. Configure the application settings in the Azure Portal or update your CI/CD pipeline:
-   - Update the Key Vault access policies
-   - Configure Google authentication
-   - Set up any additional application settings
-
-2. Get the deployment outputs:
-```bash
-terraform output
-```
-
-This will show:
-- App Service URL
-- SQL Server FQDN
-- Key Vault URI
-- Application Insights Key
-
-## Cleanup
-
-To remove all resources:
-```bash
-terraform destroy -var-file=terraform.tfvars
-```
-
-## Important Notes
-
-1. The SQL Server firewall is configured to allow Azure services by default. You may need to add your IP address for local development.
-
-2. Key Vault secrets are created for:
-   - SQL Connection String
-   - Application Insights Connection String
-
-3. The App Service is configured with:
-   - .NET 8.0
-   - Always On enabled
-   - Managed identity for Key Vault access
-
-## Cost Considerations
-
-The default configuration uses:
-- Basic (B1) App Service Plan
-- Basic SQL Database
-- Standard Key Vault
-
-Estimated monthly cost: ~$60-80 USD (varies by region and usage)
-
-To reduce costs for development:
-- Use Free tier App Service Plan (F1) - Remove "always_on" setting
-- Use Basic SQL Database with lower DTUs
-- Delete resources when not in use
-
-## Security Notes
-
-1. All sensitive values should be stored in Key Vault
-2. SQL Server passwords should be rotated regularly
-3. Enable Azure AD authentication for SQL Server in production
-4. Review and restrict Key Vault access policies
-5. Enable HTTPS-only for the App Service
-6. Configure backup policies for the database
 
 ## Troubleshooting
 
-1. If deployment fails:
-   - Check Azure permissions
-   - Verify resource name availability
-   - Review resource quotas
-   - Check resource dependencies
+Common issues:
+1. Authentication errors: Check Azure CLI login
+2. Resource conflicts: Check existing resources
+3. Permission errors: Verify Azure permissions
+4. Name conflicts: Ensure unique resource names
+5. Quota limits: Check subscription limits
 
-2. Common issues:
-   - Name conflicts (resources must be globally unique)
-   - Insufficient permissions
-   - Resource provider not registered
-   - Region availability for services
+## Best Practices
 
-## Support
-
-For issues with:
-- Infrastructure deployment: Review Azure Portal activity logs
-- Terraform configuration: Check Terraform plan output
-- Application configuration: Review App Service logs
+- Use version control for Terraform files
+- Keep secrets in Key Vault
+- Use workspaces for environments
+- Tag resources appropriately
+- Review access controls regularly
+- Monitor resource usage
+- Implement cost controls

@@ -1,205 +1,113 @@
-# ST JAGO ROBOTICS SCRIMMAGE MANAGER
+# Robotics Scrimmage Manager
 
-A comprehensive management system for the St. Jago Robotics Scrimmage 2024 competition. The system includes both an administrative interface for managing teams, challenges, and announcements, as well as public displays for leaderboards and real-time updates.
-
-## Architecture
-
-The solution is structured into two main projects:
-
-### RoboticsManager.Lib
-Core business logic library containing:
-- Entity models and database context
-- Business services
-- Real-time update system using SignalR
-- Configuration management
-- Database initialization and seeding
-
-### RoboticsManager.Web
-MVC web application that provides:
-- Administrative interface
-- Public displays
-- User authentication/authorization
-- Real-time updates
+Web application for managing the ST JAGO ROBOTICS SCRIMMAGE 2024 competition.
 
 ## Features
 
-### Team Management
-- Create, update, and delete teams
-- Track team points
-- Upload team logos
-- View team completion history
-- Real-time leaderboard updates
+- Real-time leaderboard and announcements using SignalR
+- Team management and scoring system
+- Challenge tracking and completion verification
+- Role-based access control (Admin, Judge, Scorekeeper)
+- Google authentication integration
+- Mobile-responsive design with black and gold theme
 
-### Challenge Management
-- Create and manage challenges
-- Support for unique (first-to-complete) challenges
-- Track challenge completions
-- Award points automatically
-- Challenge completion statistics
+## Requirements
 
-### Announcements
-- Priority-based announcements (Info, Warning, Danger, etc.)
-- Markdown support for rich content
-- Show/hide functionality
-- Automatic announcements for significant events
-- Real-time updates
+- .NET 8.0 SDK
+- SQL Server 2019+
+- Azure subscription (for deployment)
+- Google Developer Console project (for authentication)
 
-### Real-time Updates
-- SignalR-based real-time notifications
-- Leaderboard updates
-- Challenge completion broadcasts
-- Announcement pushes
-- Automatic page refresh every 5 minutes
+## Quick Start
 
-### Security
-- Google Single Sign-On integration
-- Role-based access control
-- Audit logging of all changes
-- Secure configuration management
-
-## Technology Stack
-
-- .NET 8.0
-- Entity Framework Core
-- SQL Server
-- SignalR for real-time updates
-- Markdig for Markdown processing
-- Azure hosting support
-
-## Getting Started
-
-1. Clone the repository:
-```powershell
-git clone https://github.com/your-org/robotics-scrimmage-manager.git
-cd robotics-scrimmage-manager
-```
-
-2. Create configuration files:
-```powershell
+1. Configure your environment:
+```bash
 cp src/RoboticsManager.Web/appsettings.example.json src/RoboticsManager.Web/appsettings.json
+# Edit appsettings.json with your settings
 ```
 
-3. Update the configuration in `appsettings.json` with your settings:
-- Database connection string
-- Google authentication credentials
-- Application settings
-
-4. Create and update the database:
-```powershell
-cd src/RoboticsManager.Web
-dotnet ef database update
+2. Set up the database:
+```bash
+sqlcmd -S your-server -i sql/setup.sql
+sqlcmd -S your-server -i sql/seed.sql  # Optional: for test data
 ```
 
-5. Run the application:
-```powershell
-dotnet run
+3. Run the application:
+```bash
+dotnet run --project src/RoboticsManager.Web
 ```
 
 ## Azure Deployment
 
-The project includes Terraform configurations for Azure deployment. See the [Terraform README](terraform/README.md) for detailed deployment instructions.
-
-1. Configure Azure resources:
-```powershell
+1. Set up Terraform:
+```bash
 cd terraform
 cp terraform.tfvars.example terraform.tfvars
-# Update terraform.tfvars with your values
+# Edit terraform.tfvars with your values
 ```
 
-2. Deploy to Azure:
-```powershell
+2. Deploy infrastructure:
+```bash
 terraform init
-terraform plan -out=tfplan
-terraform apply tfplan
+terraform plan
+terraform apply
 ```
 
-## Configuration Options
-
-### Competition Settings
-- Name and branding
-- Refresh intervals
-- Leaderboard size
-- Announcement counts
-
-### Theme Customization
-- Primary and secondary colors
-- Font family
-- Logo URL
-
-### SignalR Options
-- Hub configuration
-- Connection settings
-- Message size limits
-
-### Database Options
-- Command timeouts
-- Retry policies
-- Logging settings
-
-See `appsettings.example.json` for all available options.
-
-## Development
-
-### Adding Migrations
-```powershell
-cd src/RoboticsManager.Web
-dotnet ef migrations add MigrationName --project ../RoboticsManager.Lib
-dotnet ef database update
+3. Deploy application:
+```bash
+dotnet publish src/RoboticsManager.Web -c Release
 ```
 
-### Running Tests
-```powershell
-dotnet test
+## Project Structure
+
+```
+├── src/
+│   ├── RoboticsManager.Lib/        # Core library
+│   │   ├── Models/                 # Domain models
+│   │   ├── Services/               # Business logic
+│   │   ├── Data/                   # Database context
+│   │   └── Hubs/                   # SignalR hubs
+│   │
+│   └── RoboticsManager.Web/        # Web application
+│       ├── Controllers/            # MVC controllers
+│       ├── Views/                  # Razor views
+│       ├── wwwroot/               # Static files
+│       └── Helpers/               # View helpers
+│
+├── sql/                           # Database scripts
+├── terraform/                     # Infrastructure code
+└── tests/                        # Unit tests
 ```
 
-### Code Style
-- Follow .NET coding conventions
-- Use async/await consistently
-- Document public APIs
-- Include XML comments for public members
+## Configuration
 
-## Services
+### Google Authentication
 
-### ITeamService
-- Team management and points tracking
-- Leaderboard functionality
-- Challenge completion tracking
+1. Create project in Google Cloud Console
+2. Enable Google+ API
+3. Create OAuth 2.0 credentials
+4. Add authorized origins and redirect URIs
+5. Update appsettings.json with credentials
 
-### IChallengeService
-- Challenge management
-- Completion tracking
-- Unique challenge handling
-- Statistics and reporting
+### Azure Resources
 
-### IAnnouncementService
-- Announcement management
-- Markdown processing
-- Priority-based filtering
-- Automatic announcements
+Required resources:
+- App Service (Web App)
+- SQL Database
+- Application Insights
+- Key Vault (optional)
 
-### IUpdateService
-- Real-time update broadcasting
-- Change tracking
-- Audit logging
-- Event notifications
+See terraform/terraform.tfvars.example for configuration options.
 
-## Contributing
+## Development Guidelines
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+- Use async/await for database operations
+- Follow REST principles for API endpoints
+- Implement proper error handling
+- Add unit tests for new features
+- Use SignalR for real-time updates
+- Follow the existing code style
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For issues:
-- Check existing GitHub issues
-- Review the documentation
-- Submit a new issue with:
-  - Clear description
-  - Steps to reproduce
-  - Expected vs actual behavior
+MIT License

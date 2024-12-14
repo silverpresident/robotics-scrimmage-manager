@@ -4,152 +4,88 @@ This directory contains SQL scripts for setting up and managing the Robotics Scr
 
 ## Scripts Overview
 
-1. `setup.sql`: Creates the database schema
-   - Creates database if it doesn't exist
-   - Sets up required tables and relationships
-   - Creates indexes for performance
-   - Adds default roles
+### setup.sql
+- Creates the database if it doesn't exist
+- Sets up required tables and indexes
+- Creates stored procedures for common operations
+- Creates views for frequently used queries
+- Configures database maintenance jobs
 
-2. `seed.sql`: Populates the database with sample data
-   - Sample teams
-   - Sample challenges
-   - Sample announcements
-   - Safe to run multiple times (cleans existing data first)
-
-3. `cleanup.sql`: Removes all data for development
-   - Keeps schema intact
-   - Removes all data from tables
-   - Resets identity columns
+### seed.sql
+- Populates the database with sample data for testing
+- Includes example teams, challenges, and announcements
+- Safe to run multiple times (cleans existing data first)
+- Useful for development and testing environments
 
 ## Usage
 
 ### Initial Setup
-
-1. Connect to your SQL Server instance
-2. Run the setup script:
 ```sql
-sqlcmd -S .\SQLEXPRESS -i setup.sql
+-- Run as SQL Server administrator
+sqlcmd -S your-server -i setup.sql
 ```
 
-### Adding Sample Data
-
-After setup, you can add sample data:
+### Load Test Data
 ```sql
-sqlcmd -S .\SQLEXPRESS -i seed.sql
+-- Optional: Run after setup.sql to load sample data
+sqlcmd -S your-server -i seed.sql
 ```
 
-### Development Cleanup
-
-To reset the database (keeping schema):
-```sql
-sqlcmd -S .\SQLEXPRESS -i cleanup.sql
-```
-
-## Database Schema
+## Database Objects
 
 ### Tables
+- Teams
+- Challenges
+- ChallengeCompletions
+- Announcements
+- Updates
+- AspNetUsers (Identity)
 
-1. `[robotics].[Teams]`
-   - Core team information
-   - Tracks points and achievements
-   - Links to team logo
+### Stored Procedures
+- sp_GetTeamLeaderboard
+- sp_GetChallengeStats
+- sp_CleanupOldUpdates
 
-2. `[robotics].[Challenges]`
-   - Challenge definitions
-   - Points and requirements
-   - Unique vs regular challenges
+### Views
+- vw_ActiveAnnouncements
+- vw_RecentUpdates
 
-3. `[robotics].[ChallengeCompletions]`
-   - Records of completed challenges
-   - Points awarded
-   - Completion notes
+### Indexes
+- IX_Teams_TotalPoints
+- IX_Teams_TeamNo
+- IX_Challenges_Points
+- IX_Announcements_CreatedAt
+- IX_Announcements_IsVisible
+- IX_Updates_CreatedAt
 
-4. `[robotics].[Announcements]`
-   - System announcements
-   - Priority levels
-   - Markdown content
+## Maintenance
 
-5. `[robotics].[Updates]`
-   - System-wide activity log
-   - Links to related entities
-   - Broadcast status
+- Database backups are configured through Azure
+- Automatic index maintenance is enabled
+- Old updates are cleaned up after 30 days
+- Statistics are automatically updated
 
-6. `[dbo].[AspNetUsers]` and related tables
-   - Identity framework tables
-   - User authentication
-   - Role management
+## Security Notes
 
-### Key Relationships
-
-```plaintext
-Teams ─┬─── ChallengeCompletions ───┬─ Challenges
-       └─── Updates ────────────────┘
-                      └─── Announcements
-```
-
-## Important Notes
-
-1. **Permissions**
-   - Scripts assume you have database creation rights
-   - Requires ALTER, INSERT, DELETE permissions
-   - Should be run as database owner or administrator
-
-2. **Data Reset**
-   - `seed.sql` clears existing data before inserting
-   - Use with caution in production
-   - Consider backing up data first
-
-3. **Identity Tables**
-   - Standard ASP.NET Core Identity tables
-   - Located in `dbo` schema
-   - Managed by Entity Framework migrations
-
-4. **Indexes**
-   - Optimized for common queries
-   - Consider monitoring for additional needs
-   - Adjust based on actual usage patterns
-
-## Development Workflow
-
-1. First-time setup:
-```bash
-sqlcmd -S .\SQLEXPRESS -i setup.sql
-sqlcmd -S .\SQLEXPRESS -i seed.sql
-```
-
-2. Reset during development:
-```bash
-sqlcmd -S .\SQLEXPRESS -i cleanup.sql
-sqlcmd -S .\SQLEXPRESS -i seed.sql
-```
-
-3. Update schema:
-   - Use Entity Framework migrations
-   - Or create new SQL scripts
-   - Document changes in this README
+- Connection strings should be stored securely
+- Use Azure Key Vault in production
+- Follow principle of least privilege
+- Enable TLS encryption for connections
+- Regular security audits recommended
 
 ## Troubleshooting
 
-1. **Permission Errors**
-   - Verify SQL Server authentication
-   - Check user permissions
-   - Run as administrator if needed
+If you encounter errors:
+1. Ensure SQL Server is running
+2. Verify connection string
+3. Check permissions
+4. Look for existing database/objects
+5. Review SQL Server logs
 
-2. **Data Issues**
-   - Check foreign key constraints
-   - Verify data integrity
-   - Use cleanup script if needed
+## Development Guidelines
 
-3. **Performance**
-   - Monitor index usage
-   - Check query plans
-   - Adjust indexes as needed
-
-## Best Practices
-
-1. Always backup before running scripts
-2. Test in development first
-3. Use transactions for safety
-4. Monitor script execution time
-5. Keep scripts idempotent
-6. Document any schema changes
+- Always use parameterized queries
+- Include proper error handling
+- Test scripts in development first
+- Document schema changes
+- Use transactions for data integrity
