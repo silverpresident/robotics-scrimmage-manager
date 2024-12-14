@@ -1,0 +1,89 @@
+@model Team
+@{
+    ViewData["Title"] = $"Delete {Model.Name}";
+}
+
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h4 class="mb-0">
+            <i class="bi bi-exclamation-triangle"></i> Delete Team
+        </h4>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <h5 class="alert-heading">
+                <i class="bi bi-exclamation-circle"></i> Warning
+            </h5>
+            <p>
+                Are you sure you want to delete the team <strong>@Model.Name</strong>?
+                This action cannot be undone and will:
+            </p>
+            <ul class="mb-0">
+                <li>Remove all challenge completions for this team</li>
+                <li>Delete all points history</li>
+                <li>Remove the team from the leaderboard</li>
+            </ul>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <dl class="row">
+                    <dt class="col-sm-4">Team Name</dt>
+                    <dd class="col-sm-8">@Model.Name</dd>
+
+                    <dt class="col-sm-4">Team Number</dt>
+                    <dd class="col-sm-8">@Model.TeamNo</dd>
+
+                    <dt class="col-sm-4">School</dt>
+                    <dd class="col-sm-8">@Model.School</dd>
+
+                    <dt class="col-sm-4">Total Points</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge bg-primary">@Model.TotalPoints</span>
+                    </dd>
+
+                    <dt class="col-sm-4">Team Color</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge rounded-pill" style="background-color: @Model.Color">&nbsp;</span>
+                        @Model.Color
+                    </dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                {
+                    <img src="@Model.LogoUrl" alt="@Model.Name logo" class="img-fluid" 
+                         style="max-height: 150px; object-fit: contain;" />
+                }
+            </div>
+        </div>
+
+        <form asp-action="Delete" method="post" class="mt-4">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Delete Team
+            </button>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Details
+            </a>
+        </form>
+    </div>
+</div>
+
+<style>
+    .badge.rounded-pill {
+        width: 20px;
+        height: 20px;
+        vertical-align: middle;
+        margin-right: 0.5rem;
+    }
+
+    dt {
+        font-weight: 500;
+        color: #666;
+    }
+
+    .alert ul {
+        padding-left: 1.5rem;
+    }
+</style>

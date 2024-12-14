@@ -1,0 +1,104 @@
+@model Team
+@{
+    ViewData["Title"] = "Add Team";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">Add New Team</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label">Team Name</label>
+                        <input asp-for="Name" class="form-control" required maxlength="100" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="TeamNo" class="form-label">Team Number</label>
+                        <input asp-for="TeamNo" class="form-control" required maxlength="20" />
+                        <span asp-validation-for="TeamNo" class="text-danger"></span>
+                        <div class="form-text">A unique identifier for the team (e.g., T001)</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="School" class="form-label">School</label>
+                        <input asp-for="School" class="form-control" required maxlength="100" />
+                        <span asp-validation-for="School" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Color" class="form-label">Team Color</label>
+                        <div class="input-group">
+                            <input asp-for="Color" type="color" class="form-control form-control-color" 
+                                   value="#000000" title="Choose your team color" />
+                            <input type="text" class="form-control" id="colorHex" readonly />
+                        </div>
+                        <span asp-validation-for="Color" class="text-danger"></span>
+                        <div class="form-text">This color will be used to identify your team</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="LogoUrl" class="form-label">Logo URL</label>
+                        <input asp-for="LogoUrl" type="url" class="form-control" maxlength="2048" />
+                        <span asp-validation-for="LogoUrl" class="text-danger"></span>
+                        <div class="form-text">Optional. URL to your team's logo image</div>
+                    </div>
+
+                    <div class="mb-3" id="logoPreview" style="display: none;">
+                        <label class="form-label">Logo Preview</label>
+                        <img src="" alt="Logo preview" class="img-fluid" 
+                             style="max-height: 100px; object-fit: contain;" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-transparent px-0 pb-0">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create Team
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Update color hex input when color picker changes
+        document.querySelector('input[type="color"]').addEventListener('input', function(e) {
+            document.getElementById('colorHex').value = e.target.value.toUpperCase();
+        });
+
+        // Initialize color hex display
+        document.getElementById('colorHex').value = document.querySelector('input[type="color"]').value.toUpperCase();
+
+        // Logo preview
+        const logoUrl = document.querySelector('input[type="url"]');
+        const logoPreview = document.getElementById('logoPreview');
+        const previewImg = logoPreview.querySelector('img');
+
+        logoUrl.addEventListener('input', function() {
+            if (this.value) {
+                previewImg.src = this.value;
+                logoPreview.style.display = 'block';
+            } else {
+                logoPreview.style.display = 'none';
+            }
+        });
+
+        previewImg.addEventListener('error', function() {
+            logoPreview.style.display = 'none';
+        });
+    </script>
+}

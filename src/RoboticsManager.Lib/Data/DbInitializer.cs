@@ -45,7 +45,7 @@ namespace RoboticsManager.Lib.Data
 
         private static async Task SeedAdminUserAsync(UserManager<ApplicationUser> userManager)
         {
-            const string adminEmail = "admin@stjago.edu.jm";
+            const string adminEmail = "shane.edwards@stjago.edu.jm";
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
             if (adminUser == null)
@@ -75,16 +75,58 @@ namespace RoboticsManager.Lib.Data
                 {
                     new Challenge
                     {
-                        Name = "Line Following",
-                        Description = "Navigate the robot through a complex line course with intersections and curves.",
-                        Points = 100,
+                        Name = "First To Register",
+                        Description = "Be the first team to register for St Jago Scrimmage.",
+                        Points = 10,
+                        IsUnique = true
+                    },
+                    new Challenge
+                    {
+                        Name = "First To The Field",
+                        Description = "Be the first team to have driving robot on the field.",
+                        Points = 10,
                         IsUnique = false
                     },
                     new Challenge
                     {
-                        Name = "Maze Navigation",
-                        Description = "Guide the robot through a maze using sensors and autonomous control.",
-                        Points = 150,
+                        Name = "First To The Challenge",
+                        Description = "Be the first team to attempt one of the Basic Challenges.",
+                        Points = 10,
+                        IsUnique = false
+                    },
+                    new Challenge
+                    {
+                        Name = "First To Complete Challenge",
+                        Description = "Be the first team to attempt any of the Basic Challenges.",
+                        Points = 10,
+                        IsUnique = false
+                    },
+                    new Challenge
+                    {
+                        Name = "Basic Challenge - Task 1",
+                        Description = "Any team that completes the Basic Challenge - Task 1",
+                        Points = 30,
+                        IsUnique = false
+                    },
+                    new Challenge
+                    {
+                        Name = "Autonomous Line Following",
+                        Description = "Navigate the robot along the yellow line course on the practice field.",
+                        Points = 30,
+                        IsUnique = false
+                    },
+                    new Challenge
+                    {
+                        Name = "Driver Controlled Race",
+                        Description = "Win a driver controlled race following the direction yellow line.",
+                        Points = 20,
+                        IsUnique = false
+                    },
+                    new Challenge
+                    {
+                        Name = "Driver Controlled Race Bonus Points",
+                        Description = "Win a driver controlled race following the direction yellow line without knocking down any cone.",
+                        Points = 5,
                         IsUnique = false
                     },
                     new Challenge

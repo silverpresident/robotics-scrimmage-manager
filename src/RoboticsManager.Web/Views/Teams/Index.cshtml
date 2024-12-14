@@ -1,0 +1,101 @@
+@model IEnumerable<RoboticsManager.Lib.Models.Team>
+@{
+    ViewData["Title"] = "Teams";
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Teams</h4>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus"></i> Add Team
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 40%">Team</th>
+                        <th>School</th>
+                        <th class="text-end">Points</th>
+                        <th style="width: 200px">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var team in Model.OrderByDescending(t => t.TotalPoints))
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    @if (!string.IsNullOrEmpty(team.LogoUrl))
+                                    {
+                                        <img src="@team.LogoUrl" alt="@team.Name logo" class="me-2" 
+                                             style="width: 40px; height: 40px; object-fit: contain;" />
+                                    }
+                                    <div>
+                                        <div class="d-flex align-items-center">
+                                            <strong>@team.Name</strong>
+                                            <span class="badge rounded-pill ms-2" 
+                                                  style="background-color: @team.Color">
+                                                &nbsp;
+                                            </span>
+                                        </div>
+                                        <small class="text-muted">@team.TeamNo</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="align-middle">@team.School</td>
+                            <td class="align-middle text-end">
+                                <span class="badge bg-primary" style="font-size: 1rem;">
+                                    @team.TotalPoints
+                                </span>
+                            </td>
+                            <td class="align-middle">
+                                <div class="btn-group" role="group">
+                                    <a asp-action="Details" asp-route-id="@team.Id" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-info-circle"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@team.Id" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@team.Id" 
+                                       class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info">
+                No teams have been added yet. <a asp-action="Create">Add your first team</a>.
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .badge.rounded-pill {
+        width: 20px;
+        height: 20px;
+    }
+
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+
+    .btn-group .btn i {
+        font-size: 1rem;
+    }
+
+    .table > :not(caption) > * > * {
+        padding: 1rem 0.75rem;
+    }
+</style>

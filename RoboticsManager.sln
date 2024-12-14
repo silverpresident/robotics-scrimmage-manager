@@ -32,6 +32,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "terraform", "terraform", "{
 		terraform\variables.tf = terraform\variables.tf
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{8A65897D-5704-49C6-9AF5-DB467A775499}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoboticsManager.Tests", "tests\RoboticsManager.Tests\RoboticsManager.Tests.csproj", "{F9B1E320-01FE-4FB5-A7C6-3DA3889FE594}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,11 +50,18 @@ Global
 		{8872D8E0-4560-492E-87D1-1B0D4FF46966}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8872D8E0-4560-492E-87D1-1B0D4FF46966}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8872D8E0-4560-492E-87D1-1B0D4FF46966}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9B1E320-01FE-4FB5-A7C6-3DA3889FE594}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9B1E320-01FE-4FB5-A7C6-3DA3889FE594}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9B1E320-01FE-4FB5-A7C6-3DA3889FE594}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9B1E320-01FE-4FB5-A7C6-3DA3889FE594}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6F7G8H9I-0J1K-2L3M-4N5O-6P7Q8R9S0T1U}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F9B1E320-01FE-4FB5-A7C6-3DA3889FE594} = {8A65897D-5704-49C6-9AF5-DB467A775499}
 	EndGlobalSection
 EndGlobal

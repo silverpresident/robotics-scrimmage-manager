@@ -1,0 +1,173 @@
+@model Announcement
+@{
+    ViewData["Title"] = "New Announcement";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h4 class="mb-0">Create Announcement</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Body" class="form-label">Content</label>
+                        <textarea asp-for="Body" class="form-control" id="markdownEditor" rows="10" required
+                                  placeholder="Write your announcement here using Markdown..."></textarea>
+                        <span asp-validation-for="Body" class="text-danger"></span>
+                        <div class="form-text">
+                            Use Markdown for formatting. 
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#markdownHelp">
+                                View Markdown help
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Priority" class="form-label">Priority</label>
+                        <select asp-for="Priority" class="form-select" asp-items="Html.GetEnumSelectList<AnnouncementPriority>()">
+                        </select>
+                        <span asp-validation-for="Priority" class="text-danger"></span>
+                        <div class="form-text">
+                            Select the importance level of this announcement
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsVisible" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsVisible" class="form-check-label">Make announcement visible</label>
+                        </div>
+                        <div class="form-text">
+                            Hidden announcements won't be displayed on the public page
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Preview</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="preview" class="markdown-preview">
+                                <!-- Preview content will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-transparent px-0 pb-0">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Create Announcement
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Markdown Help Modal -->
+<div class="modal fade" id="markdownHelp" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Markdown Formatting Guide</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Basic Formatting</h6>
+                        <pre><code># Heading 1
+## Heading 2
+### Heading 3
+
+**Bold text**
+*Italic text*
+~~Strikethrough~~
+
+- Bullet point
+1. Numbered list
+
+[Link text](URL)
+![Image alt text](URL)</code></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Advanced Features</h6>
+                        <pre><code>> Blockquote text
+
+```
+Code block
+```
+
+| Table | Header |
+|-------|--------|
+| Cell  | Cell   |
+
+- [x] Task list
+- [ ] Unchecked item</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .markdown-preview {
+        min-height: 300px;
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+    }
+
+    .markdown-preview:empty::before {
+        content: 'Preview will appear here...';
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    pre code {
+        display: block;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+    }
+</style>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // Configure marked for safe HTML
+        marked.setOptions({
+            sanitize: true,
+            breaks: true
+        });
+
+        // Update preview when markdown content changes
+        const editor = document.getElementById('markdownEditor');
+        const preview = document.getElementById('preview');
+
+        function updatePreview() {
+            const markdown = editor.value;
+            const html = marked(markdown);
+            preview.innerHTML = html || '<em>Preview will appear here...</em>';
+        }
+
+        editor.addEventListener('input', updatePreview);
+        editor.addEventListener('change', updatePreview);
+
+        // Initial preview
+        updatePreview();
+    </script>
+}

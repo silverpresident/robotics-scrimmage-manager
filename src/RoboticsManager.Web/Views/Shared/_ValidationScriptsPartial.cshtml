@@ -1,2 +1,73 @@
 ﻿<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
 <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Custom validation for color input
+        $.validator.addMethod('hexcolor', function(value, element) {
+            return this.optional(element) || /^#[0-9A-F]{6}$/i.test(value);
+        }, 'Please enter a valid hex color code (e.g., #FF0000)');
+
+        // Custom validation for URLs
+        $.validator.addMethod('url', function(value, element) {
+            if (this.optional(element)) {
+                return true;
+            }
+            
+            try {
+                new URL(value);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }, 'Please enter a valid URL');
+
+        // Custom validation for markdown content
+        $.validator.addMethod('markdown', function(value, element) {
+            if (this.optional(element)) {
+                return true;
+            }
+            
+            // Basic markdown validation - ensure it's not just whitespace
+            // and has a reasonable length
+            return value.trim().length >= 10 && value.trim().length <= 10000;
+        }, 'Please enter valid markdown content (10-10000 characters)');
+
+        // Add custom validation rules to form elements
+        $('input[type="color"]').each(function() {
+            $(this).rules('add', {
+                hexcolor: true
+            });
+        });
+
+        $('input[type="url"]').each(function() {
+            $(this).rules('add', {
+                url: true
+            });
+        });
+
+        $('.markdown-editor').each(function() {
+            $(this).rules('add', {
+                markdown: true
+            });
+        });
+
+        // Show validation errors in a bootstrap-styled way
+        $.validator.setDefaults({
+            highlight: function(element) {
+                $(element).addClass('is-invalid');
+            },
+            unhighlight: function(element) {
+                $(element).removeClass('is-invalid');
+            },
+            errorElement: 'div',
+            errorClass: 'invalid-feedback',
+            errorPlacement: function(error, element) {
+                if (element.parent('.input-group').length) {
+                    error.insertAfter(element.parent());
+                } else {
+                    error.insertAfter(element);
+                }
+            }
+        });
+    });
+</script>

@@ -1,0 +1,88 @@
+@model IEnumerable<RoboticsManager.Lib.Models.Challenge>
+@using RoboticsManager.Web.Helpers
+@{
+    ViewData["Title"] = "Challenges";
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Available Challenges</h4>
+    </div>
+    <div class="card-body">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var challenge in Model.OrderBy(c => c.Name))
+            {
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">@challenge.Name</h5>
+                            @if (challenge.IsUnique)
+                            {
+                                <span class="badge bg-warning" title="First team to complete gets the points">Unique</span>
+                            }
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                @Html.Raw(MarkdownHelper.ToHtml(challenge.Description))
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-primary" style="font-size: 1rem;">@challenge.Points points</span>
+                                <a asp-action="Details" asp-route-id="@challenge.Id" class="btn btn-outline-primary btn-sm">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info">
+                No challenges have been added yet.
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .card-header .badge {
+        font-size: 0.8rem;
+    }
+
+    /* Markdown content styling */
+    .card-body h1, .card-body h2, .card-body h3 {
+        font-size: 1.2rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-body h4, .card-body h5, .card-body h6 {
+        font-size: 1rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-body p {
+        margin-bottom: 0.5rem;
+    }
+
+    .card-body ul, .card-body ol {
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-body pre {
+        background-color: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-body code {
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+    }
+</style>

@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using RoboticsManager.Lib.Data;
 using RoboticsManager.Lib.Models;
@@ -19,9 +15,87 @@ namespace RoboticsManager.Lib.Services.Implementations
             IUpdateService updateService,
             ITeamService teamService)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-            _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
-            _teamService = teamService ?? throw new ArgumentNullException(nameof(teamService));
+            _context = context;
+            _updateService = updateService;
+            _teamService = teamService;
+        }
+
+        public async Task<Challenge> CreateChallengeAsync(Challenge challenge)
+        {
+            if (await _context.Challenges.AnyAsync(c => c.Name == challenge.Name))
+            {
+                throw new InvalidOperationException($"A challenge with name '{challenge.Name}' already exists.");
+            }
+
+            _context.Challenges.Add(challenge);
+            await _context.SaveChangesAsync();
+
+            await _updateService.CreateChallengeUpdateAsync(
+                challenge,
+                UpdateType.ChallengeCreated,
+                $"New challenge '{challenge.Name}' created"
+            );
+
+            return challenge;
+        }
+
+        public async Task<Challenge> UpdateChallengeAsync(Challenge challenge)
+        {
+            var existingChallenge = await _context.Challenges
+                .FirstOrDefaultAsync(c => c.Id == challenge.Id);
+
+            if (existingChallenge == null)
+            {
+                throw new InvalidOperationException($"Challenge not found.");
+            }
+
+            if (await _context.Challenges.AnyAsync(c => c.Name == challenge.Name && c.Id != challenge.Id))
+            {
+                throw new InvalidOperationException($"A challenge with name '{challenge.Name}' already exists.");
+            }
+
+            existingChallenge.Name = challenge.Name;
+            existingChallenge.Description = challenge.Description;
+            existingChallenge.Points = challenge.Points;
+            existingChallenge.IsUnique = challenge.IsUnique;
+
+            await _context.SaveChangesAsync();
+
+            await _updateService.CreateChallengeUpdateAsync(
+                challenge,
+                UpdateType.ChallengeUpdated,
+                $"Challenge '{challenge.Name}' updated"
+            );
+
+            return existingChallenge;
+        }
+
+        public async Task DeleteChallengeAsync(Guid id)
+        {
+            var challenge = await _context.Challenges
+                .Include(c => c.Completions)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (challenge == null)
+            {
+                throw new InvalidOperationException($"Challenge not found.");
+            }
+
+            _context.Challenges.Remove(challenge);
+            await _context.SaveChangesAsync();
+
+            await _updateService.CreateChallengeUpdateAsync(
+                challenge,
+                UpdateType.ChallengeDeleted,
+                $"Challenge '{challenge.Name}' deleted"
+            );
+        }
+
+        public async Task<Challenge?> GetChallengeByIdAsync(Guid id)
+        {
+            return await _context.Challenges
+                .Include(c => c.Completions)
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<IEnumerable<Challenge>> GetAllChallengesAsync()
@@ -32,100 +106,32 @@ namespace RoboticsManager.Lib.Services.Implementations
                 .ToListAsync();
         }
 
-        public async Task<Challenge> GetChallengeByIdAsync(Guid id)
+        public async Task<IEnumerable<Challenge>> GetAvailableUniqueChallengesAsync()
         {
             return await _context.Challenges
                 .Include(c => c.Completions)
-                .FirstOrDefaultAsync(c => c.Id == id);
-        }
-
-        public async Task<Challenge> CreateChallengeAsync(Challenge challenge)
-        {
-            if (challenge == null) throw new ArgumentNullException(nameof(challenge));
-
-            // Validate challenge name uniqueness
-            if (await _context.Challenges.AnyAsync(c => c.Name == challenge.Name))
-            {
-                throw new InvalidOperationException($"Challenge name '{challenge.Name}' is already in use.");
-            }
-
-            _context.Challenges.Add(challenge);
-            await _context.SaveChangesAsync();
-
-            // Create and broadcast update
-            await _updateService.CreateChallengeUpdateAsync(challenge, UpdateType.ChallengeCreated,
-                $"New challenge '{challenge.Name}' worth {challenge.Points} points has been added!");
-
-            return challenge;
-        }
-
-        public async Task<Challenge> UpdateChallengeAsync(Challenge challenge)
-        {
-            if (challenge == null) throw new ArgumentNullException(nameof(challenge));
-
-            var existingChallenge = await _context.Challenges.FindAsync(challenge.Id);
-            if (existingChallenge == null)
-            {
-                throw new InvalidOperationException($"Challenge with ID {challenge.Id} not found.");
-            }
-
-            // Check name uniqueness if changed
-            if (challenge.Name != existingChallenge.Name &&
-                await _context.Challenges.AnyAsync(c => c.Name == challenge.Name))
-            {
-                throw new InvalidOperationException($"Challenge name '{challenge.Name}' is already in use.");
-            }
-
-            // Update properties
-            existingChallenge.Name = challenge.Name;
-            existingChallenge.Description = challenge.Description;
-            existingChallenge.Points = challenge.Points;
-            existingChallenge.IsUnique = challenge.IsUnique;
-
-            await _context.SaveChangesAsync();
-
-            // Create and broadcast update
-            await _updateService.CreateChallengeUpdateAsync(existingChallenge, UpdateType.ChallengeUpdated,
-                $"Challenge '{existingChallenge.Name}' has been updated.");
-
-            return existingChallenge;
-        }
-
-        public async Task DeleteChallengeAsync(Guid id)
-        {
-            var challenge = await _context.Challenges.FindAsync(id);
-            if (challenge == null)
-            {
-                throw new InvalidOperationException($"Challenge with ID {id} not found.");
-            }
-
-            // Store challenge info for update message
-            var challengeInfo = $"'{challenge.Name}'";
-
-            _context.Challenges.Remove(challenge);
-            await _context.SaveChangesAsync();
-
-            // Create and broadcast update
-            await _updateService.CreateChallengeUpdateAsync(challenge, UpdateType.ChallengeDeleted,
-                $"Challenge {challengeInfo} has been removed.");
+                .Where(c => c.IsUnique && !c.Completions.Any())
+                .OrderBy(c => c.Name)
+                .ToListAsync();
         }
 
         public async Task<ChallengeCompletion> RecordCompletionAsync(Guid challengeId, Guid teamId, string notes)
         {
-            var challenge = await GetChallengeByIdAsync(challengeId);
+            var challenge = await _context.Challenges
+                .Include(c => c.Completions)
+                .FirstOrDefaultAsync(c => c.Id == challengeId);
+
             if (challenge == null)
             {
-                throw new InvalidOperationException($"Challenge with ID {challengeId} not found.");
+                throw new InvalidOperationException("Challenge not found.");
             }
 
-            // Check if team has already completed this challenge
             if (await _teamService.HasCompletedChallengeAsync(teamId, challengeId))
             {
                 throw new InvalidOperationException("Team has already completed this challenge.");
             }
 
-            // Check if unique challenge is still available
-            if (challenge.IsUnique && !await IsUniqueCompletionAvailableAsync(challengeId))
+            if (challenge.IsUnique && challenge.Completions.Any())
             {
                 throw new InvalidOperationException("This unique challenge has already been completed by another team.");
             }
@@ -142,48 +148,19 @@ namespace RoboticsManager.Lib.Services.Implementations
             await _context.SaveChangesAsync();
 
             // Award points to the team
-            await _teamService.AwardPointsAsync(teamId, challenge.Points, $"completing challenge '{challenge.Name}'");
-
-            // Create and broadcast update
-            await _updateService.CreateChallengeCompletionUpdateAsync(completion,
-                $"Team has completed challenge '{challenge.Name}' and earned {challenge.Points} points!");
+            await _teamService.AwardPointsAsync(
+                teamId,
+                challenge.Points,
+                $"Completed challenge: {challenge.Name}"
+            );
 
             return completion;
-        }
-
-        public async Task<bool> IsUniqueCompletionAvailableAsync(Guid challengeId)
-        {
-            var challenge = await GetChallengeByIdAsync(challengeId);
-            return challenge != null && (!challenge.IsUnique || !challenge.Completions.Any());
-        }
-
-        public async Task<IEnumerable<ChallengeCompletion>> GetCompletionsForChallengeAsync(Guid challengeId)
-        {
-            return await _context.ChallengeCompletions
-                .Include(cc => cc.Team)
-                .Where(cc => cc.ChallengeId == challengeId)
-                .OrderByDescending(cc => cc.CreatedAt)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Team>> GetTeamsCompletedChallengeAsync(Guid challengeId)
-        {
-            return await _context.ChallengeCompletions
-                .Include(cc => cc.Team)
-                .Where(cc => cc.ChallengeId == challengeId)
-                .Select(cc => cc.Team)
-                .ToListAsync();
-        }
-
-        public async Task<int> GetTotalCompletionsAsync(Guid challengeId)
-        {
-            return await _context.ChallengeCompletions
-                .CountAsync(cc => cc.ChallengeId == challengeId);
         }
 
         public async Task RemoveCompletionAsync(Guid challengeId, Guid teamId)
         {
             var completion = await _context.ChallengeCompletions
+                .Include(cc => cc.Challenge)
                 .FirstOrDefaultAsync(cc => cc.ChallengeId == challengeId && cc.TeamId == teamId);
 
             if (completion == null)
@@ -195,11 +172,34 @@ namespace RoboticsManager.Lib.Services.Implementations
             await _context.SaveChangesAsync();
 
             // Deduct points from the team
-            await _teamService.AwardPointsAsync(teamId, -completion.PointsAwarded, 
-                "challenge completion removed");
+            await _teamService.AwardPointsAsync(
+                teamId,
+                -completion.PointsAwarded,
+                $"Removed completion of challenge: {completion.Challenge.Name}"
+            );
         }
 
-        public async Task<IDictionary<Challenge, int>> GetChallengeCompletionStatsAsync()
+        public async Task<IEnumerable<ChallengeCompletion>> GetCompletionsForChallengeAsync(Guid challengeId)
+        {
+            return await _context.ChallengeCompletions
+                .Include(cc => cc.Team)
+                .Include(cc => cc.Challenge)
+                .Where(cc => cc.ChallengeId == challengeId)
+                .OrderByDescending(cc => cc.CreatedAt)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Challenge>> GetCompletedChallengesForTeamAsync(Guid teamId)
+        {
+            return await _context.ChallengeCompletions
+                .Include(cc => cc.Challenge)
+                .Where(cc => cc.TeamId == teamId)
+                .Select(cc => cc.Challenge)
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+        }
+
+        public async Task<Dictionary<Challenge, int>> GetChallengeCompletionStatsAsync()
         {
             var challenges = await _context.Challenges
                 .Include(c => c.Completions)
@@ -207,25 +207,8 @@ namespace RoboticsManager.Lib.Services.Implementations
 
             return challenges.ToDictionary(
                 c => c,
-                c => c.Completions.Count
+                c => c.Completions.Count()
             );
-        }
-
-        public async Task<IEnumerable<Challenge>> GetMostPopularChallengesAsync(int count = 5)
-        {
-            return await _context.Challenges
-                .Include(c => c.Completions)
-                .OrderByDescending(c => c.Completions.Count)
-                .Take(count)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Challenge>> GetAvailableUniqueChallengesAsync()
-        {
-            return await _context.Challenges
-                .Include(c => c.Completions)
-                .Where(c => c.IsUnique && !c.Completions.Any())
-                .ToListAsync();
         }
     }
 }

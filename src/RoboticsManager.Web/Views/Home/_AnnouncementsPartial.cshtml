@@ -1,0 +1,126 @@
+@using RoboticsManager.Web.Helpers
+@using RoboticsManager.Lib.Models
+@model IEnumerable<Announcement>
+
+<div class="announcements">
+    @foreach (var announcement in Model.OrderByDescending(a => a.CreatedAt))
+    {
+        string alertClass = announcement.Priority switch
+        {
+            AnnouncementPriority.Info => "alert-info",
+            AnnouncementPriority.Warning => "alert-warning",
+            AnnouncementPriority.Danger => "alert-danger",
+            AnnouncementPriority.Primary => "alert-primary",
+            AnnouncementPriority.Secondary => "alert-secondary",
+            _ => "alert-info"
+        };
+
+        <div class="alert @alertClass mb-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="announcement-content">
+                    @Html.Raw(announcement.RenderedBody ?? MarkdownHelper.ToHtml(announcement.Body))
+                </div>
+                <small class="text-muted ms-2">
+                    @announcement.CreatedAt.ToLocalTime().ToString("g")
+                </small>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No announcements yet.
+    </div>
+}
+
+<style>
+    .announcements {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .announcement-content {
+        flex: 1;
+    }
+
+    .announcement-content :last-child {
+        margin-bottom: 0;
+    }
+
+    /* Custom scrollbar for announcements */
+    .announcements::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .announcements::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .announcements::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 4px;
+    }
+
+    .announcements::-webkit-scrollbar-thumb:hover {
+        background: var(--secondary-color);
+    }
+
+    /* Priority-based borders */
+    .alert-info {
+        border-left: 4px solid #0dcaf0;
+    }
+
+    .alert-warning {
+        border-left: 4px solid #ffc107;
+    }
+
+    .alert-danger {
+        border-left: 4px solid #dc3545;
+    }
+
+    .alert-primary {
+        border-left: 4px solid #0d6efd;
+    }
+
+    .alert-secondary {
+        border-left: 4px solid #6c757d;
+    }
+
+    /* Markdown content styling */
+    .announcement-content h1, .announcement-content h2, .announcement-content h3 {
+        font-size: 1.2rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .announcement-content h4, .announcement-content h5, .announcement-content h6 {
+        font-size: 1rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .announcement-content p {
+        margin-bottom: 0.5rem;
+    }
+
+    .announcement-content ul, .announcement-content ol {
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .announcement-content pre {
+        background-color: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .announcement-content code {
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+    }
+</style>

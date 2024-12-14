@@ -8,33 +8,53 @@ namespace RoboticsManager.Lib.Models
     {
         [Required]
         [StringLength(100)]
-        public string Name { get; set; }
+        public required string Name { get; set; }
 
         [Required]
         [StringLength(20)]
-        public string TeamNo { get; set; }
+        public required string TeamNo { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string School { get; set; }
+        public required string School { get; set; }
 
         [Required]
         [StringLength(7)] // #RRGGBB format
-        public string Color { get; set; }
+        public required string Color { get; set; }
 
         [Url]
         [StringLength(2048)]
-        public string LogoUrl { get; set; }
+        public string? LogoUrl { get; set; }
 
         public int TotalPoints { get; set; }
 
         // Navigation properties
-        public virtual ICollection<ChallengeCompletion> CompletedChallenges { get; set; }
+        public virtual ICollection<ChallengeCompletion> CompletedChallenges { get; private set; }
 
         public Team()
         {
             CompletedChallenges = new HashSet<ChallengeCompletion>();
             TotalPoints = 0;
+        }
+
+        // Helper methods for managing the collection
+        public void AddCompletion(ChallengeCompletion completion)
+        {
+            CompletedChallenges.Add(completion);
+            TotalPoints += completion.PointsAwarded;
+        }
+
+        public void RemoveCompletion(ChallengeCompletion completion)
+        {
+            if (CompletedChallenges.Remove(completion))
+            {
+                TotalPoints -= completion.PointsAwarded;
+            }
+        }
+
+        public void UpdatePoints(int pointsDelta)
+        {
+            TotalPoints += pointsDelta;
         }
     }
 }

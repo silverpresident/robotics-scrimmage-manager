@@ -3,47 +3,178 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - RoboticsManager.Web</title>
+    <title>@ViewData["Title"] - ST JAGO ROBOTICS SCRIMMAGE 2024</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/RoboticsManager.Web.styles.css" asp-append-version="true" />
+    <style>
+        :root {
+            --primary-color: #FFD700;     /* Gold */
+            --secondary-color: #212529;   /* Black */
+            --accent-color: #FFF;         /* White */
+            --text-color: #212529;        /* Dark text */
+            --text-light: #FFF;           /* Light text */
+        }
+
+        body {
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+        }
+
+        .navbar {
+            background-color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .navbar-brand {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+        }
+
+        .nav-link {
+            color: var(--text-light) !important;
+        }
+
+        .nav-link:hover,
+        .nav-link:focus {
+            color: var(--primary-color) !important;
+        }
+
+        .nav-link.active {
+            color: var(--primary-color) !important;
+            font-weight: bold;
+        }
+
+        .dropdown-menu {
+            background-color: var(--secondary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .dropdown-item {
+            color: var(--text-light);
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+        }
+
+        .card {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            background-color: var(--secondary-color);
+            color: var(--text-light);
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--secondary-color);
+        }
+
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background-color: #e6c200;
+            border-color: #e6c200;
+            color: var(--secondary-color);
+        }
+
+        .btn-outline-primary {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline-primary:hover,
+        .btn-outline-primary:focus {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+        }
+
+        footer {
+            background-color: var(--secondary-color);
+            border-top: 2px solid var(--primary-color);
+            color: var(--text-light);
+            padding: 1rem 0;
+            margin-top: 2rem;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--secondary-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #e6c200;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">RoboticsManager.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-robot"></i> ROBOTICS SCRIMMAGE
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link" asp-controller="Challenges" asp-action="Index">Challenges</a>
                         </li>
+                        @if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Teams" asp-action="Index">Teams</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Announcements" asp-action="Index">Announcements</a>
+                            </li>
+                        }
                     </ul>
+                    <partial name="_LoginPartial" />
                 </div>
             </div>
         </nav>
     </header>
+
     <div class="container">
+        <partial name="_StatusMessage" />
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
     <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - RoboticsManager.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        <div class="container text-center">
+            &copy; 2024 - ST JAGO ROBOTICS SCRIMMAGE - <a href="#" class="text-light">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

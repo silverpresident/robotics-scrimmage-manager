@@ -1,0 +1,142 @@
+@model RoboticsManager.Web.Models.HomeViewModel
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="display-4 mb-2">@Model.TotalTeams</div>
+                <h5 class="card-title mb-0">Teams</h5>
+            </div>
+            <div class="card-footer bg-primary text-white">
+                <i class="bi bi-people-fill"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="display-4 mb-2">@Model.TotalChallenges</div>
+                <h5 class="card-title mb-0">Challenges</h5>
+            </div>
+            <div class="card-footer bg-warning text-dark">
+                <i class="bi bi-trophy-fill"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="display-4 mb-2">@Model.TotalCompletions</div>
+                <h5 class="card-title mb-0">Completions</h5>
+            </div>
+            <div class="card-footer bg-success text-white">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card h-100 text-center">
+            <div class="card-body">
+                <div class="display-4 mb-2">@Model.TotalPoints</div>
+                <h5 class="card-title mb-0">Total Points</h5>
+            </div>
+            <div class="card-footer bg-info text-white">
+                <i class="bi bi-star-fill"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+        border: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    .card-footer {
+        border-top: none;
+        padding: 0.75rem;
+    }
+
+    .card-footer i {
+        font-size: 1.5rem;
+    }
+
+    .display-4 {
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: var(--secondary-color);
+    }
+
+    .card-title {
+        color: #6c757d;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    /* Custom colors */
+    .bg-primary {
+        background-color: var(--primary-color) !important;
+    }
+
+    .bg-warning {
+        background-color: #ffc107 !important;
+    }
+
+    .bg-success {
+        background-color: #28a745 !important;
+    }
+
+    .bg-info {
+        background-color: #0dcaf0 !important;
+    }
+
+    /* Animation */
+    @@keyframes countUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .display-4 {
+        animation: countUp 0.5s ease-out forwards;
+    }
+</style>
+
+<script>
+    // Animate numbers when they come into view
+    function animateValue(element, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const value = Math.floor(progress * (end - start) + start);
+            element.textContent = value.toLocaleString();
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    // Animate all stat numbers
+    document.querySelectorAll('.display-4').forEach(element => {
+        const finalValue = parseInt(element.textContent.replace(/,/g, ''), 10);
+        element.textContent = '0';
+        animateValue(element, 0, finalValue, 1000);
+    });
+</script>

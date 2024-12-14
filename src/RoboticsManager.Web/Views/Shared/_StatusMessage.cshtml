@@ -1,0 +1,80 @@
+@{
+    var success = TempData["Success"]?.ToString();
+    var error = TempData["Error"]?.ToString();
+}
+
+@if (!string.IsNullOrEmpty(success))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-check-circle me-2"></i>
+            <div>@success</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-circle me-2"></i>
+            <div>@error</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<style>
+    .alert {
+        margin-bottom: 1rem;
+    }
+
+    .alert i {
+        font-size: 1.2rem;
+    }
+
+    .alert .btn-close {
+        padding: 1rem;
+    }
+
+    /* Fade out animation */
+    .alert.fade {
+        transition: opacity 0.3s linear;
+    }
+
+    /* Auto-hide after 5 seconds */
+    .alert:not(.manual-close) {
+        animation: fadeOutAlert 0.3s linear 5s forwards;
+    }
+
+    @* Escape @ symbol for keyframes *@
+    @@keyframes fadeOutAlert {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+            display: none;
+        }
+    }
+</style>
+
+<script>
+    // Keep alert visible if user hovers over it
+    document.querySelectorAll('.alert').forEach(alert => {
+        alert.addEventListener('mouseenter', () => {
+            alert.classList.add('manual-close');
+        });
+        
+        alert.addEventListener('mouseleave', () => {
+            alert.classList.remove('manual-close');
+            // Start fade out after 2 seconds if alert wasn't manually closed
+            setTimeout(() => {
+                if (!alert.classList.contains('manual-close')) {
+                    alert.classList.remove('show');
+                }
+            }, 2000);
+        });
+    });
+</script>

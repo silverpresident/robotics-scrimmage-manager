@@ -1,0 +1,49 @@
+@model IEnumerable<RoboticsManager.Lib.Models.Team>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Team</th>
+                <th>School</th>
+                <th class="text-end">Points</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int rank = 1;
+                foreach (var team in Model)
+                {
+                    <tr>
+                        <td class="align-middle">@rank</td>
+                        <td class="align-middle">
+                            <div class="d-flex align-items-center">
+                                @if (!string.IsNullOrEmpty(team.LogoUrl))
+                                {
+                                    <img src="@team.LogoUrl" alt="@team.Name logo" class="me-2" style="width: 30px; height: 30px; object-fit: contain;" />
+                                }
+                                <div>
+                                    <strong>@team.Name</strong>
+                                    <small class="text-muted d-block">@team.TeamNo</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="align-middle">@team.School</td>
+                        <td class="align-middle text-end">
+                            <span class="badge bg-primary" style="font-size: 1rem;">@team.TotalPoints</span>
+                        </td>
+                    </tr>
+                    rank++;
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No teams have registered yet.
+    </div>
+}

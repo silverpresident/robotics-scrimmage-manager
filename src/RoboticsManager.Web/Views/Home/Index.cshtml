@@ -1,8 +1,150 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model HomeViewModel
+@{
+    ViewData["Title"] = "ST JAGO ROBOTICS SCRIMMAGE 2024";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="mb-4">
+    <partial name="_StatsPartial" model="Model" />
 </div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Leaderboard</h4>
+                <div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshLeaderboard()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body" id="leaderboard-container">
+                <partial name="_LeaderboardPartial" model="Model.Leaderboard" />
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Recent Activity</h4>
+                <div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshTimeline()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body" id="timeline-container">
+                <partial name="_TimelinePartial" model="Model.Timeline" />
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Announcements</h4>
+                <div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshAnnouncements()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body" id="announcements-container">
+                <partial name="_AnnouncementsPartial" model="Model.Announcements" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script>
+        // SignalR connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/updates")
+            .withAutomaticReconnect()
+            .build();
+
+        // Auto-refresh timers
+        let leaderboardTimer;
+        let announcementsTimer;
+        let timelineTimer;
+
+        // Start SignalR connection
+        connection.start()
+            .then(() => {
+                console.log("SignalR Connected");
+            })
+            .catch(err => console.error(err));
+
+        // Handle real-time updates
+        connection.on("ReceiveLeaderboardUpdate", () => {
+            refreshLeaderboard();
+        });
+
+        connection.on("ReceiveAnnouncement", () => {
+            refreshAnnouncements();
+            refreshTimeline();
+        });
+
+        connection.on("ReceiveUpdate", () => {
+            refreshTimeline();
+        });
+
+        // Refresh functions
+        function refreshLeaderboard() {
+            const container = document.getElementById('leaderboard-container');
+            const spinner = showLoading(container);
+
+            fetch('/Home/LeaderboardPartial')
+                .then(response => response.text())
+                .then(html => {
+                    container.innerHTML = html;
+                })
+                .finally(() => {
+                    hideLoading(spinner);
+                });
+        }
+
+        function refreshAnnouncements() {
+            const container = document.getElementById('announcements-container');
+            const spinner = showLoading(container);
+
+            fetch('/Home/AnnouncementsPartial')
+                .then(response => response.text())
+                .then(html => {
+                    container.innerHTML = html;
+                })
+                .finally(() => {
+                    hideLoading(spinner);
+                });
+        }
+
+        function refreshTimeline() {
+            const container = document.getElementById('timeline-container');
+            const spinner = showLoading(container);
+
+            fetch('/Home/TimelinePartial')
+                .then(response => response.text())
+                .then(html => {
+                    container.innerHTML = html;
+                })
+                .finally(() => {
+                    hideLoading(spinner);
+                });
+        }
+
+        // Set up auto-refresh timers (5 minutes)
+        document.addEventListener('DOMContentLoaded', () => {
+            leaderboardTimer = setInterval(refreshLeaderboard, 300000);
+            announcementsTimer = setInterval(refreshAnnouncements, 300000);
+            timelineTimer = setInterval(refreshTimeline, 300000);
+        });
+
+        // Clean up timers when leaving the page
+        window.addEventListener('beforeunload', () => {
+            clearInterval(leaderboardTimer);
+            clearInterval(announcementsTimer);
+            clearInterval(timelineTimer);
+        });
+    </script>
+}

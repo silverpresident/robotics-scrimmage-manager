@@ -1,0 +1,149 @@
+@model RoboticsManager.Lib.Models.Challenge
+@using RoboticsManager.Web.Helpers
+@{
+    ViewData["Title"] = Model.Name;
+    var completionRate = (double)ViewData["CompletionRate"];
+    var completionCount = (int)ViewData["CompletionCount"];
+    var totalTeams = (int)ViewData["TotalTeams"];
+    var isAvailable = (bool)ViewData["IsAvailable"];
+}
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">@Model.Name</h4>
+        <div>
+            @if (Model.IsUnique)
+            {
+                <span class="badge bg-warning me-2" title="First team to complete gets the points">Unique Challenge</span>
+            }
+            <span class="badge bg-primary" style="font-size: 1rem;">@Model.Points points</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="challenge-description mb-4">
+                    @Html.Raw(MarkdownHelper.ToHtml(Model.Description))
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Challenge Status</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.IsUnique)
+                        {
+                            if (isAvailable)
+                            {
+                                <div class="alert alert-success">
+                                    <i class="bi bi-trophy"></i> This challenge is still available!
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle"></i> This challenge has been completed!
+                                </div>
+                            }
+                        }
+
+                        <div class="mb-3">
+                            <h6>Completion Rate</h6>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: @completionRate%;" 
+                                     aria-valuenow="@completionRate" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    @completionRate.ToString("F1")%
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Teams Completed:</span>
+                                <strong>@completionCount</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total Teams:</span>
+                                <strong>@totalTeams</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Points Available:</span>
+                                <strong>@Model.Points</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer">
+        <a asp-action="Index" class="btn btn-secondary">Back to Challenges</a>
+    </div>
+</div>
+
+<style>
+    /* Challenge description markdown styling */
+    .challenge-description {
+        font-size: 1.1rem;
+    }
+
+    .challenge-description h1 {
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .challenge-description h2 {
+        font-size: 1.5rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .challenge-description h3 {
+        font-size: 1.3rem;
+        margin-top: 1.2rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .challenge-description ul, .challenge-description ol {
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .challenge-description li {
+        margin-bottom: 0.5rem;
+    }
+
+    .challenge-description pre {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        margin: 1rem 0;
+    }
+
+    .challenge-description code {
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.25rem;
+    }
+
+    /* Stats styling */
+    .stats {
+        font-size: 0.9rem;
+    }
+
+    .progress {
+        background-color: #e9ecef;
+    }
+
+    .progress-bar {
+        background-color: var(--primary-color);
+    }
+
+    .alert i {
+        margin-right: 0.5rem;
+    }
+</style>

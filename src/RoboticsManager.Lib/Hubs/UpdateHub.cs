@@ -1,56 +1,115 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
-using RoboticsManager.Lib.Models;
+using Microsoft.Extensions.Logging;
 
 namespace RoboticsManager.Lib.Hubs
 {
-    public interface IUpdateClient
+    public class UpdateHub : Hub
     {
-        Task ReceiveUpdate(Update update);
-        Task ReceiveTeamUpdate(Team team);
-        Task ReceiveAnnouncement(Announcement announcement);
-        Task ReceiveLeaderboardUpdate(Team[] leaderboard);
-        Task ReceiveChallengeUpdate(Challenge challenge);
-    }
+        private readonly ILogger<UpdateHub> _logger;
 
-    public class UpdateHub : Hub<IUpdateClient>
-    {
-        public const string HubUrl = "/hubs/updates";
-
-        public async Task SendUpdate(Update update)
+        public UpdateHub(ILogger<UpdateHub> logger)
         {
-            await Clients.All.ReceiveUpdate(update);
-        }
-
-        public async Task SendTeamUpdate(Team team)
-        {
-            await Clients.All.ReceiveTeamUpdate(team);
-        }
-
-        public async Task SendAnnouncement(Announcement announcement)
-        {
-            await Clients.All.ReceiveAnnouncement(announcement);
-        }
-
-        public async Task SendLeaderboardUpdate(Team[] leaderboard)
-        {
-            await Clients.All.ReceiveLeaderboardUpdate(leaderboard);
-        }
-
-        public async Task SendChallengeUpdate(Challenge challenge)
-        {
-            await Clients.All.ReceiveChallengeUpdate(challenge);
+            _logger = logger;
         }
 
         public override async Task OnConnectedAsync()
         {
+            _logger.LogInformation("Client connected: {ConnectionId}", Context.ConnectionId);
             await base.OnConnectedAsync();
         }
 
-        public override async Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
+            if (exception != null)
+            {
+                _logger.LogWarning(exception, "Client disconnected with error: {ConnectionId}", Context.ConnectionId);
+            }
+            else
+            {
+                _logger.LogInformation("Client disconnected: {ConnectionId}", Context.ConnectionId);
+            }
             await base.OnDisconnectedAsync(exception);
+        }
+
+        // Called when a team's points are updated
+        public async Task NotifyLeaderboardUpdate()
+        {
+            await Clients.All.SendAsync("ReceiveLeaderboardUpdate");
+        }
+
+        // Called when a new announcement is created or updated
+        public async Task NotifyAnnouncementUpdate()
+        {
+            await Clients.All.SendAsync("ReceiveAnnouncement");
+        }
+
+        // Called when a new update is created
+        public async Task NotifyUpdate()
+        {
+            await Clients.All.SendAsync("ReceiveUpdate");
+        }
+
+        // Called when a challenge is completed
+        public async Task NotifyChallengeCompletion(string teamName, string challengeName, int points)
+        {
+            await Clients.All.SendAsync("ReceiveChallengeCompletion", teamName, challengeName, points);
+        }
+
+        // Called when a team is added or updated
+        public async Task NotifyTeamUpdate(string teamName)
+        {
+            await Clients.All.SendAsync("ReceiveTeamUpdate", teamName);
+        }
+
+        // Called when a challenge is added or updated
+        public async Task NotifyChallengeUpdate(string challengeName)
+        {
+            await Clients.All.SendAsync("ReceiveChallengeUpdate", challengeName);
+        }
+
+        // Group management for specific updates
+        public async Task JoinTeamGroup(string teamId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"team_{teamId}");
+        }
+
+        public async Task LeaveTeamGroup(string teamId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"team_{teamId}");
+        }
+
+        public async Task JoinChallengeGroup(string challengeId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"challenge_{challengeId}");
+        }
+
+        public async Task LeaveChallengeGroup(string challengeId)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"challenge_{challengeId}");
+        }
+
+        // Send update to specific team's group
+        public async Task SendTeamSpecificUpdate(string teamId, string message)
+        {
+            await Clients.Group($"team_{teamId}").SendAsync("ReceiveTeamSpecificUpdate", message);
+        }
+
+        // Send update to specific challenge's group
+        public async Task SendChallengeSpecificUpdate(string challengeId, string message)
+        {
+            await Clients.Group($"challenge_{challengeId}").SendAsync("ReceiveChallengeSpecificUpdate", message);
+        }
+
+        // Send admin-only updates
+        public async Task SendAdminUpdate(string message)
+        {
+            await Clients.Group("Administrators").SendAsync("ReceiveAdminUpdate", message);
+        }
+
+        // Send judge-only updates
+        public async Task SendJudgeUpdate(string message)
+        {
+            await Clients.Group("Judges").SendAsync("ReceiveJudgeUpdate", message);
         }
     }
 }
