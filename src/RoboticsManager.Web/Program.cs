@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RoboticsManager.Lib.Data;
 using RoboticsManager.Lib.Extensions;
+using RoboticsManager.Lib.Models;
 using RoboticsManager.Lib.Services;
 using RoboticsManager.Lib.Services.Implementations;
 
@@ -29,9 +30,6 @@ builder.Services.AddScoped<IChallengeService, ChallengeService>();
 builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
 builder.Services.AddScoped<IUpdateService, UpdateService>();
 
-// Add Identity services
-builder.Services.AddDefaultIdentity<ApplicationUser>()
-    .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddRazorPages();
 

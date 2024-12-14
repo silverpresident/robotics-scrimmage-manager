@@ -23,6 +23,8 @@ namespace RoboticsManager.Lib.Extensions
                 )
             );
 
+            // Add Identity services
+            //services.AddDefaultIdentity<ApplicationUser>();
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
                 // Password settings
@@ -42,7 +44,8 @@ namespace RoboticsManager.Lib.Extensions
                 options.SignIn.RequireConfirmedEmail = true;
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            ;
 
             // Configure authentication
             services.AddAuthentication(options =>
