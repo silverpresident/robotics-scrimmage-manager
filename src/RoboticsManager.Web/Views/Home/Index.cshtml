@@ -135,9 +135,9 @@
 
         // Set up auto-refresh timers (5 minutes)
         document.addEventListener('DOMContentLoaded', () => {
-            leaderboardTimer = setInterval(refreshLeaderboard, 120000);
-            announcementsTimer = setInterval(refreshAnnouncements, 150000);
-            timelineTimer = setInterval(refreshTimeline, 300000);
+            leaderboardTimer = setInterval(refreshLeaderboard, 150000);
+            announcementsTimer = setInterval(refreshAnnouncements, 120000);
+            timelineTimer = setInterval(refreshTimeline, 60000);
         });
 
         // Clean up timers when leaving the page
