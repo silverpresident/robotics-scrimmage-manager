@@ -138,6 +138,7 @@
             leaderboardTimer = setInterval(refreshLeaderboard, 150000);
             announcementsTimer = setInterval(refreshAnnouncements, 120000);
             timelineTimer = setInterval(refreshTimeline, 60000);
+            setTimeout(function(){ location.reload(); }, 300000);
         });
 
         // Clean up timers when leaving the page
