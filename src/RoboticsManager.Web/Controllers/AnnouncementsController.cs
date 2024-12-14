@@ -1,32 +1,47 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using RoboticsManager.Lib.Models;
 using RoboticsManager.Lib.Services;
+using RoboticsManager.Lib.Hubs;
+using RoboticsManager.Lib.Extensions;
 
 namespace RoboticsManager.Web.Controllers
 {
     [Authorize]
-    public class AnnouncementsController : Controller
+    public class AnnouncementsController : BaseController
     {
         private readonly IAnnouncementService _announcementService;
-        private readonly ILogger<AnnouncementsController> _logger;
+        private readonly IHubContext<UpdateHub> _hubContext;
 
         public AnnouncementsController(
             IAnnouncementService announcementService,
+            IHubContext<UpdateHub> hubContext,
+            UserManager<ApplicationUser> userManager,
             ILogger<AnnouncementsController> logger)
+            : base(userManager, logger)
         {
             _announcementService = announcementService;
-            _logger = logger;
+            _hubContext = hubContext;
         }
 
         // GET: Announcements
         public async Task<IActionResult> Index()
         {
-            var announcements = await _announcementService.GetAllAnnouncementsAsync();
-            return View(announcements);
+            try
+            {
+                var announcements = await _announcementService.GetAllAnnouncementsAsync();
+                return View(announcements);
+            }
+            catch (Exception ex)
+            {
+                return HandleError(ex, nameof(Index));
+            }
         }
 
         // GET: Announcements/Create
+        [Authorize(Policy = "RequireJudge")]
         public IActionResult Create()
         {
             return View();
@@ -35,38 +50,56 @@ namespace RoboticsManager.Web.Controllers
         // POST: Announcements/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireJudge")]
         public async Task<IActionResult> Create([Bind("Body,Priority,IsVisible")] Announcement announcement)
         {
-            if (ModelState.IsValid)
+            try
             {
-                try
+                if (ModelState.IsValid)
                 {
                     await _announcementService.CreateAnnouncementAsync(announcement);
-                    TempData["Success"] = "Announcement created successfully.";
+                    await _hubContext.NotifyAnnouncementCreated(announcement);
+                    await LogUserAction("CreateAnnouncement", $"Created announcement with priority: {announcement.Priority}");
+                    AddSuccessMessage("Announcement created successfully.");
                     return RedirectToAction(nameof(Index));
                 }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", ex.Message);
-                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", ex.Message);
             }
             return View(announcement);
         }
 
         // GET: Announcements/Edit/5
+        [Authorize(Policy = "RequireJudge")]
         public async Task<IActionResult> Edit(Guid id)
         {
-            var announcement = await _announcementService.GetAnnouncementByIdAsync(id);
-            if (announcement == null)
+            try
             {
-                return NotFound();
+                var announcement = await _announcementService.GetAnnouncementByIdAsync(id);
+                if (announcement == null)
+                {
+                    return NotFound();
+                }
+
+                if (!await UserCanEditAnnouncement(id))
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
+                return View(announcement);
             }
-            return View(announcement);
+            catch (Exception ex)
+            {
+                return HandleError(ex, nameof(Edit));
+            }
         }
 
         // POST: Announcements/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireJudge")]
         public async Task<IActionResult> Edit(Guid id, [Bind("Id,Body,Priority,IsVisible")] Announcement announcement)
         {
             if (id != announcement.Id)
@@ -74,67 +107,99 @@ namespace RoboticsManager.Web.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!await UserCanEditAnnouncement(id))
             {
-                try
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            try
+            {
+                if (ModelState.IsValid)
                 {
                     await _announcementService.UpdateAnnouncementAsync(announcement);
-                    TempData["Success"] = "Announcement updated successfully.";
+                    await _hubContext.NotifyAnnouncementUpdated(announcement);
+                    await LogUserAction("UpdateAnnouncement", $"Updated announcement with priority: {announcement.Priority}");
+                    AddSuccessMessage("Announcement updated successfully.");
                     return RedirectToAction(nameof(Index));
                 }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                if (!await AnnouncementExists(announcement.Id))
                 {
-                    if (!await AnnouncementExists(announcement.Id))
-                    {
-                        return NotFound();
-                    }
-                    ModelState.AddModelError("", ex.Message);
+                    return NotFound();
                 }
+                ModelState.AddModelError("", ex.Message);
             }
             return View(announcement);
         }
 
         // GET: Announcements/Delete/5
+        [Authorize(Policy = "RequireAdministrator")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var announcement = await _announcementService.GetAnnouncementByIdAsync(id);
-            if (announcement == null)
+            try
             {
-                return NotFound();
+                var announcement = await _announcementService.GetAnnouncementByIdAsync(id);
+                if (announcement == null)
+                {
+                    return NotFound();
+                }
+
+                return View(announcement);
             }
-            return View(announcement);
+            catch (Exception ex)
+            {
+                return HandleError(ex, nameof(Delete));
+            }
         }
 
         // POST: Announcements/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireAdministrator")]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            var announcement = await _announcementService.GetAnnouncementByIdAsync(id);
-            if (announcement == null)
+            try
             {
-                return NotFound();
-            }
+                var announcement = await _announcementService.GetAnnouncementByIdAsync(id);
+                if (announcement == null)
+                {
+                    return NotFound();
+                }
 
-            await _announcementService.DeleteAnnouncementAsync(id);
-            TempData["Success"] = "Announcement deleted successfully.";
-            return RedirectToAction(nameof(Index));
+                await _announcementService.DeleteAnnouncementAsync(id);
+                await LogUserAction("DeleteAnnouncement", "Deleted announcement");
+                AddSuccessMessage("Announcement deleted successfully.");
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                return HandleError(ex, nameof(Index));
+            }
         }
 
         // POST: Announcements/ToggleVisibility/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireJudge")]
         public async Task<IActionResult> ToggleVisibility(Guid id)
         {
             try
             {
+                if (!await UserCanEditAnnouncement(id))
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
                 var announcement = await _announcementService.ToggleVisibilityAsync(id);
                 var status = announcement.IsVisible ? "visible" : "hidden";
-                TempData["Success"] = $"Announcement is now {status}.";
+                await LogUserAction("ToggleAnnouncementVisibility", $"Set announcement visibility to: {status}");
+                AddSuccessMessage($"Announcement is now {status}.");
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error toggling visibility: {ex.Message}";
+                AddErrorMessage($"Error toggling visibility: {ex.Message}");
             }
 
             return RedirectToAction(nameof(Index));
@@ -143,16 +208,23 @@ namespace RoboticsManager.Web.Controllers
         // POST: Announcements/UpdateRenderedContent/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = "RequireJudge")]
         public async Task<IActionResult> UpdateRenderedContent(Guid id)
         {
             try
             {
+                if (!await UserCanEditAnnouncement(id))
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
                 await _announcementService.UpdateRenderedContentAsync(id);
-                TempData["Success"] = "Announcement content updated successfully.";
+                await LogUserAction("UpdateAnnouncementContent", "Updated announcement rendered content");
+                AddSuccessMessage("Announcement content updated successfully.");
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error updating content: {ex.Message}";
+                AddErrorMessage($"Error updating content: {ex.Message}");
             }
 
             return RedirectToAction(nameof(Index));
