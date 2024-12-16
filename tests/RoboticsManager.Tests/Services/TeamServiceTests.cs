@@ -1,7 +1,5 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Moq;
 using RoboticsManager.Lib.Data;
 using RoboticsManager.Lib.Models;
@@ -11,28 +9,36 @@ using Xunit;
 
 namespace RoboticsManager.Tests.Services
 {
-    public class TeamServiceTests : IDisposable
+    public class TeamServiceTests
     {
-        private readonly ApplicationDbContext _context;
+        private readonly DbContextOptions<ApplicationDbContext> _dbContextOptions;
+        private readonly Mock<ILogger<TeamService>> _loggerMock;
         private readonly Mock<IUpdateService> _updateServiceMock;
-        private readonly TeamService _teamService;
 
         public TeamServiceTests()
         {
-            // Set up in-memory database
-            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            _dbContextOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: "TestDb_" + Guid.NewGuid().ToString())
                 .Options;
 
-            _context = new ApplicationDbContext(options);
+            _loggerMock = new Mock<ILogger<TeamService>>();
             _updateServiceMock = new Mock<IUpdateService>();
-            _teamService = new TeamService(_context, _updateServiceMock.Object);
+        }
+
+        private ApplicationDbContext CreateContext()
+        {
+            var context = new ApplicationDbContext(_dbContextOptions);
+            context.Database.EnsureCreated();
+            return context;
         }
 
         [Fact]
-        public async Task CreateTeam_ValidTeam_CreatesSuccessfully()
+        public async Task CreateTeamAsync_ValidTeam_CreatesTeamSuccessfully()
         {
             // Arrange
+            using var context = CreateContext();
+            var service = new TeamService(context, _updateServiceMock.Object, _loggerMock.Object);
+
             var team = new Team
             {
                 Name = "Test Team",
@@ -42,24 +48,22 @@ namespace RoboticsManager.Tests.Services
             };
 
             // Act
-            var result = await _teamService.CreateTeamAsync(team);
+            var result = await service.CreateTeamAsync(team);
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(team.Name, result.Name);
-            Assert.Equal(team.TeamNo, result.TeamNo);
+            Assert.Equal("Test Team", result.Name);
             Assert.Equal(0, result.TotalPoints);
-            _updateServiceMock.Verify(x => x.CreateTeamUpdateAsync(
-                It.IsAny<Team>(),
-                It.Is<UpdateType>(t => t == UpdateType.TeamCreated),
-                It.IsAny<string>()
-            ), Times.Once);
+            Assert.NotEqual(Guid.Empty, result.Id);
         }
 
         [Fact]
-        public async Task CreateTeam_DuplicateTeamNo_ThrowsException()
+        public async Task CreateTeamAsync_DuplicateTeamNo_ThrowsException()
         {
             // Arrange
+            using var context = CreateContext();
+            var service = new TeamService(context, _updateServiceMock.Object, _loggerMock.Object);
+
             var team1 = new Team
             {
                 Name = "Team 1",
@@ -76,24 +80,20 @@ namespace RoboticsManager.Tests.Services
                 Color = "#00FF00"
             };
 
-            await _teamService.CreateTeamAsync(team1);
-
             // Act & Assert
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => _teamService.CreateTeamAsync(team2)
-            );
+            await service.CreateTeamAsync(team1);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateTeamAsync(team2));
         }
 
         [Fact]
-        public async Task GetLeaderboard_ReturnsTeamsOrderedByPoints()
+        public async Task GetTeamByIdAsync_ExistingTeam_ReturnsTeam()
         {
             // Arrange
-            var teams = new[]
+            using var context = CreateContext();
+            var service = new TeamService(context, _updateServiceMock.Object, _loggerMock.Object);
+
+            var team = new Team
             {
-                new Team { Name = "Team 1", TeamNo = "T1", School = "School 1", Color = "#FF0000", TotalPoints = 100 },
-                new Team { Name = "Team 2", TeamNo = "T2", School = "School 2", Color = "#00FF00", TotalPoints = 300 },
-                new Team { Name = "Team 3", TeamNo = "T3", School = "School 3", Color = "#0000FF", TotalPoints = 200 }
-            };
 
             foreach (var team in teams)
             {

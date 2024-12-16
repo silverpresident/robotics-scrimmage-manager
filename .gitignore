@@ -65,6 +65,7 @@ appsettings.Staging.json
 *.Production.json
 *.Staging.json
 !appsettings.example.json
+!*.Example.json
 
 # Terraform
 .terraform/
