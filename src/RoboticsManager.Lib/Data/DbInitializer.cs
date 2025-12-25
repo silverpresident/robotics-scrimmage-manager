@@ -67,7 +67,7 @@ namespace RoboticsManager.Lib.Data
             var config = serviceProvider.GetRequiredService<IConfiguration>();
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             //TODO test if this works
-            var defaultUsers = config.GetValue<DefaultUser[]>("RoboticsManager:DefaultUsers");
+            var defaultUsers = config.GetSection("RoboticsManager:DefaultUsers").Get<DefaultUser[]>();
             foreach (var defaultUser in defaultUsers)
             {
                 if (string.IsNullOrEmpty(defaultUser.Email))
