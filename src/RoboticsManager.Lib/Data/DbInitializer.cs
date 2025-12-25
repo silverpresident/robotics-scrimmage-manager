@@ -78,11 +78,25 @@ namespace RoboticsManager.Lib.Data
                 // Create default user if it doesn't exist
 
                 var user = await userManager.FindByEmailAsync(defaultUser.Email);
-                if (user == null)
+                if (user != null)
                 {
                     if (defaultUser.Role == "Administrator")
                     {
-                        await userManager.AddToRoleAsync(user, defaultUser.Role);
+                        if (!await userManager.IsInRoleAsync(user, defaultUser.Role))
+                        {
+                            await userManager.AddToRoleAsync(user, defaultUser.Role);
+                        }
+                    }
+                    
+                    if (defaultUser.ResetPassword && !string.IsNullOrEmpty(defaultUser.Password)){
+                        var hasPassword = await userManager.HasPasswordAsync(user);
+                        if (hasPassword == false)
+                        {
+                            await userManager.AddPasswordAsync(user, defaultUser.Password);
+                        } else {
+                            await userManager.RemovePasswordAsync(user);
+                            await userManager.AddPasswordAsync(user, defaultUser.Password);
+                        }
                     }
                     continue;
                 }
@@ -222,5 +236,6 @@ namespace RoboticsManager.Lib.Data
         public string? UserName { get; internal set; }
         public string? Password { get; internal set; }
         public string? Role { get; internal set; }
+        public bool ResetPassword { get; internal set; } = false;
     }
 }
