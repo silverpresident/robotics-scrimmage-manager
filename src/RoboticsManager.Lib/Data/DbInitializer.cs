@@ -232,10 +232,10 @@ namespace RoboticsManager.Lib.Data
 
     internal class DefaultUser
     {
-        public string? Email { get; internal set; }
-        public string? UserName { get; internal set; }
-        public string? Password { get; internal set; }
-        public string? Role { get; internal set; }
-        public bool ResetPassword { get; internal set; } = false;
+        public string? Email { get; set; }
+        public string? UserName { get; set; }
+        public string? Password { get; set; }
+        public string? Role { get; set; }
+        public bool ResetPassword { get; set; } = false;
     }
 }
